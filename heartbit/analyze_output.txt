@@ -1,0 +1,103 @@
+﻿Analyzing heartbit...                                           
+
+   info - 'GoRouterRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead - lib\config\routes\app_router.dart:16:19 - deprecated_member_use_from_same_package
+warning - The value of the local variable 'isDashboardRoute' isn't used - lib\config\routes\app_router.dart:51:13 - unused_local_variable
+   info - 'AchievementDataSourceRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead - lib\features\achievement\presentation\providers\achievement_provider.dart:14:45 - deprecated_member_use_from_same_package
+   info - 'UnlockedAchievementsRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead - lib\features\achievement\presentation\providers\achievement_provider.dart:24:56 - deprecated_member_use_from_same_package
+   info - 'AuthRemoteDataSourceRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead - lib\features\auth\presentation\providers\auth_provider.dart:15:43 - deprecated_member_use_from_same_package
+   info - 'AuthRepositoryRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead - lib\features\auth\presentation\providers\auth_provider.dart:22:31 - deprecated_member_use_from_same_package
+   info - 'SignInAnonymouslyUseCaseRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead - lib\features\auth\presentation\providers\auth_provider.dart:31:51 - deprecated_member_use_from_same_package
+   info - 'SignOutUseCaseRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead - lib\features\auth\presentation\providers\auth_provider.dart:36:31 - deprecated_member_use_from_same_package
+   info - 'AuthStateRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead - lib\features\auth\presentation\providers\auth_provider.dart:43:31 - deprecated_member_use_from_same_package
+   info - 'AuthUserIdRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead - lib\features\auth\presentation\providers\auth_provider.dart:48:20 - deprecated_member_use_from_same_package
+   info - 'DailyQuestionRemoteDataSourceRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead - lib\features\daily_question\presentation\providers\daily_question_provider.dart:17:5 - deprecated_member_use_from_same_package
+   info - 'DailyQuestionRepositoryRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead - lib\features\daily_question\presentation\providers\daily_question_provider.dart:24:49 - deprecated_member_use_from_same_package
+   info - 'TodaysQuestionRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead - lib\features\daily_question\presentation\providers\daily_question_provider.dart:34:39 - deprecated_member_use_from_same_package
+   info - 'PastQuestionsRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead - lib\features\daily_question\presentation\providers\daily_question_provider.dart:50:43 - deprecated_member_use_from_same_package
+   info - Don't invoke 'print' in production code - lib\features\daily_question\presentation\providers\daily_question_provider.dart:125:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\daily_question\presentation\providers\daily_question_provider.dart:129:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\daily_question\presentation\providers\daily_question_provider.dart:157:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\daily_question\presentation\providers\daily_question_provider.dart:180:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\daily_question\presentation\providers\daily_question_provider.dart:184:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\drawing\data\datasources\drawing_remote_datasource.dart:114:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\drawing\data\datasources\drawing_remote_datasource.dart:121:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\drawing\data\datasources\drawing_remote_datasource.dart:124:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\drawing\data\datasources\drawing_remote_datasource.dart:126:13 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\drawing\data\datasources\drawing_remote_datasource.dart:131:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\drawing\data\datasources\drawing_remote_datasource.dart:159:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\drawing\data\datasources\drawing_remote_datasource.dart:165:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\drawing\data\datasources\drawing_remote_datasource.dart:198:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\drawing\data\datasources\drawing_remote_datasource.dart:202:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\drawing\data\datasources\drawing_remote_datasource.dart:216:9 - avoid_print
+warning - Unused import: 'package:lottie/lottie.dart' - lib\features\drawing\presentation\pages\draw_and_guess_screen.dart:11:8 - unused_import
+   info - The private field _isSubmitting could be 'final' - lib\features\drawing\presentation\pages\draw_and_guess_screen.dart:26:8 - prefer_final_fields
+warning - The value of the field '_isSubmitting' isn't used - lib\features\drawing\presentation\pages\draw_and_guess_screen.dart:26:8 - unused_field
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\features\drawing\presentation\pages\draw_and_guess_screen.dart:117:13 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\features\drawing\presentation\pages\draw_and_guess_screen.dart:135:17 - use_build_context_synchronously
+   info - Don't invoke 'print' in production code - lib\features\drawing\presentation\pages\draw_and_guess_screen.dart:223:17 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\drawing\presentation\pages\draw_and_guess_screen.dart:228:21 - avoid_print
+   info - 'DrawingRemoteDataSourceRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead - lib\features\drawing\presentation\providers\drawing_provider.dart:15:49 - deprecated_member_use_from_same_package
+   info - 'DrawingRepositoryRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead - lib\features\drawing\presentation\providers\drawing_provider.dart:20:37 - deprecated_member_use_from_same_package
+   info - 'ActiveDrawingSessionRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead - lib\features\drawing\presentation\providers\drawing_provider.dart:28:46 - deprecated_member_use_from_same_package
+   info - Don't invoke 'print' in production code - lib\features\drawing\presentation\providers\drawing_provider.dart:33:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\drawing\presentation\providers\drawing_provider.dart:36:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\drawing\presentation\providers\drawing_provider.dart:38:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\drawing\presentation\providers\drawing_provider.dart:43:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\drawing\presentation\providers\drawing_provider.dart:47:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\drawing\presentation\providers\drawing_provider.dart:68:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\drawing\presentation\providers\drawing_provider.dart:69:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\drawing\presentation\providers\drawing_provider.dart:70:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\drawing\presentation\providers\drawing_provider.dart:73:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\drawing\presentation\providers\drawing_provider.dart:79:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\drawing\presentation\providers\drawing_provider.dart:98:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\drawing\presentation\providers\drawing_provider.dart:104:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\drawing\presentation\providers\drawing_provider.dart:113:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\drawing\presentation\providers\drawing_provider.dart:116:7 - avoid_print
+   info - 'MoodRemoteDataSourceRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead - lib\features\home\presentation\providers\mood_provider.dart:12:43 - deprecated_member_use_from_same_package
+   info - 'CurrentMoodRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead - lib\features\home\presentation\providers\mood_provider.dart:22:27 - deprecated_member_use_from_same_package
+warning - Unused import: 'package:heartbit/features/pet/domain/entities/pet_evolution.dart' - lib\features\home\presentation\screens\dashboard_screen.dart:10:8 - unused_import
+warning - Unused import: 'package:heartbit/features/task/domain/entities/daily_task.dart' - lib\features\home\presentation\screens\dashboard_screen.dart:13:8 - unused_import
+warning - Unused import: 'package:heartbit/features/achievement/presentation/providers/achievement_provider.dart' - lib\features\home\presentation\screens\dashboard_screen.dart:14:8 - unused_import
+warning - Unused import: 'package:heartbit/features/achievement/domain/entities/achievement.dart' - lib\features\home\presentation\screens\dashboard_screen.dart:15:8 - unused_import
+   info - Don't invoke 'print' in production code - lib\features\home\presentation\screens\dashboard_screen.dart:99:10 - avoid_print
+warning - The left operand can't be null, so the right operand is never executed - lib\features\home\presentation\screens\dashboard_screen.dart:527:35 - dead_null_aware_expression
+warning - The '!' will have no effect because the receiver can't be null - lib\features\home\presentation\screens\dashboard_screen.dart:553:52 - unnecessary_non_null_assertion
+warning - Unused import: 'package:heartbit/config/theme/app_colors.dart' - lib\features\home\presentation\widgets\pet_display.dart:4:8 - unused_import
+   info - 'NudgeStateRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead - lib\features\nudge\presentation\providers\nudge_provider.dart:12:42 - deprecated_member_use_from_same_package
+   info - Don't invoke 'print' in production code - lib\features\nudge\presentation\providers\nudge_provider.dart:83:7 - avoid_print
+warning - Unused import: 'package:lottie/lottie.dart' - lib\features\nudge\presentation\widgets\nudge_overlay.dart:2:8 - unused_import
+warning - Unused import: 'package:heartbit/config/theme/app_colors.dart' - lib\features\nudge\presentation\widgets\nudge_overlay.dart:3:8 - unused_import
+warning - Unused import: 'package:heartbit/features/pairing/data/models/couple_model.dart' - lib\features\pairing\data\repositories\pairing_repository_impl.dart:4:8 - unused_import
+   info - 'PairingRemoteDataSourceRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead - lib\features\pairing\presentation\providers\pairing_provider.dart:17:49 - deprecated_member_use_from_same_package
+   info - 'PairingRepositoryRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead - lib\features\pairing\presentation\providers\pairing_provider.dart:24:37 - deprecated_member_use_from_same_package
+   info - 'GeneratePairingCodeUseCaseRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead - lib\features\pairing\presentation\providers\pairing_provider.dart:33:55 - deprecated_member_use_from_same_package
+   info - 'JoinWithCodeUseCaseRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead - lib\features\pairing\presentation\providers\pairing_provider.dart:38:41 - deprecated_member_use_from_same_package
+   info - 'WatchCoupleUseCaseRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead - lib\features\pairing\presentation\providers\pairing_provider.dart:43:39 - deprecated_member_use_from_same_package
+   info - 'CoupleStateRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead - lib\features\pairing\presentation\providers\pairing_provider.dart:50:35 - deprecated_member_use_from_same_package
+warning - Unused import: 'dart:math' - lib\features\pet\domain\entities\pet.dart:4:8 - unused_import
+   info - 'PetRemoteDataSourceRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead - lib\features\pet\presentation\providers\pet_provider.dart:17:41 - deprecated_member_use_from_same_package
+   info - 'PetRepositoryRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead - lib\features\pet\presentation\providers\pet_provider.dart:24:29 - deprecated_member_use_from_same_package
+   info - 'PetStateRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead - lib\features\pet\presentation\providers\pet_provider.dart:33:23 - deprecated_member_use_from_same_package
+   info - 'TaskRemoteDataSourceRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead - lib\features\task\presentation\providers\task_provider.dart:18:43 - deprecated_member_use_from_same_package
+   info - 'TaskRepositoryRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead - lib\features\task\presentation\providers\task_provider.dart:25:31 - deprecated_member_use_from_same_package
+   info - 'DailyTasksRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead - lib\features\task\presentation\providers\task_provider.dart:34:36 - deprecated_member_use_from_same_package
+   info - 'StreakRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead - lib\features\task\presentation\providers\task_provider.dart:42:20 - deprecated_member_use_from_same_package
+   info - 'PartnerStateRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead - lib\features\user\presentation\providers\partner_provider.dart:11:35 - deprecated_member_use_from_same_package
+   info - 'UserRemoteDataSourceRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead - lib\features\user\presentation\providers\user_provider.dart:11:43 - deprecated_member_use_from_same_package
+   info - 'UserRepositoryRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead - lib\features\user\presentation\providers\user_provider.dart:18:31 - deprecated_member_use_from_same_package
+warning - Dead code - lib\shared\providers\app_state_provider.dart:49:8 - dead_code
+   info - 'FirebaseAuthRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead - lib\shared\providers\firebase_providers.dart:8:27 - deprecated_member_use_from_same_package
+   info - 'FirebaseFirestoreRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead - lib\shared\providers\firebase_providers.dart:13:37 - deprecated_member_use_from_same_package
+   info - 'AuthStateChangesRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead - lib\shared\providers\firebase_providers.dart:18:32 - deprecated_member_use_from_same_package
+warning - The method doesn't override an inherited method - test\features\achievement\presentation\providers\achievement_controller_test.dart:65:16 - override_on_non_overriding_member
+warning - Unused import: 'package:heartbit/features/pairing/domain/entities/couple_entity.dart' - test\features\pairing\domain\usecases\pairing_usecases_test.dart:6:8 - unused_import
+warning - The method doesn't override an inherited method - test\helpers\fake_pairing_repository.dart:75:16 - override_on_non_overriding_member
+
+flutter : 92 issues found. (ran in 9.3s)
+At line:1 char:1
++ flutter analyze 2>&1 | Out-File -FilePath analyze_output.txt -Encodin ...
++ ~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (92 issues found. (ran in 9.3s):String) [], Remo 
+   teException
+    + FullyQualifiedErrorId : NativeCommandError
+ 

@@ -1,0 +1,73 @@
+﻿
+Running Gradle task 'assembleDebug'...                          
+flutter : 
+At line:1 char:1
++ flutter build apk -
+-debug 2>&1 | Out-Fil
+e -FilePath build_log
+.txt -En ...
++ ~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~
+    + CategoryInfo   
+           : NotSpe  
+  cified: (:String   
+ ) [], RemoteExce    
+ption
+    + FullyQualified 
+   ErrorId : Native  
+  CommandError
+ 
+FAILURE: Build failed
+ with an exception.
+
+* Where:
+Build file 'C:\Users\
+enesb\OneDrive\Masa´┐
+¢st´┐¢\heartbitios\he
+artbit\android\app\bu
+ild.gradle' line: 2
+
+* What went wrong:
+An exception occurred
+ applying plugin requ
+est [id: 'com.android
+.application']
+> Failed to apply plu
+gin 'com.android.inte
+rnal.application'.
+   > Your project pat
+h contains non-ASCII 
+characters. This will
+ most likely cause th
+e build to fail on Wi
+ndows. Please move yo
+ur project to a diffe
+rent directory. See h
+ttp://b.android.com/9
+5744 for details. Thi
+s warning can be disa
+bled by adding the li
+ne 'android.overrideP
+athCheck=true' to gra
+dle.properties file i
+n the project directo
+ry.
+
+* Try:
+> Run with --stacktra
+ce option to get the 
+stack trace.
+> Run with --info or 
+--debug option to get
+ more log output.
+> Run with --scan to 
+get full insights.
+> Get more help at ht
+tps://help.gradle.org
+.
+
+BU´┐¢LD FAILED in 1s
+Running Gradle task 'assembleDebug'...                           2.397ms
+Gradle task assembleD
+ebug failed with exit
+ code 1

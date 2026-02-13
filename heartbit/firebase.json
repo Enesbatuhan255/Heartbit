@@ -1,0 +1,17 @@
+{
+    "flutter": {
+        "platforms": {
+            "android": {
+                "default": {
+                    "projectId": "heartbit-abcd7",
+                    "appId": "1:38525940774:android:5cc8103d773d6a3416a2e7",
+                    "fileOutput": "android/app/google-services.json"
+                }
+            }
+        }
+    },
+    "functions": {
+        "source": "functions",
+        "runtime": "nodejs18"
+    }
+}
