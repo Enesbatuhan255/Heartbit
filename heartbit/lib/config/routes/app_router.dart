@@ -14,6 +14,8 @@ import 'package:heartbit/features/activity_hub/presentation/screens/bucket_list_
 import 'package:heartbit/features/activity_hub/presentation/screens/swipe_setup_screen.dart';
 import 'package:heartbit/features/activity_hub/presentation/screens/enhanced_swipe_screen.dart';
 import 'package:heartbit/features/games/stack_tower/presentation/screens/stack_tower_screen.dart';
+import 'package:heartbit/features/memory_vault/presentation/screens/memory_vault_screen.dart';
+import 'package:heartbit/features/memory_vault/presentation/screens/add_memory_screen.dart';
 import 'package:heartbit/shared/providers/app_state_provider.dart';
 import 'package:heartbit/shared/presentation/screens/loading_screen.dart';
 
@@ -81,6 +83,15 @@ GoRouter goRouter(GoRouterRef ref) {
       GoRoute(
         path: '/stack-tower',
         builder: (context, state) => const StackTowerScreen(),
+      ),
+      // Memory Vault Routes
+      GoRoute(
+        path: '/memory-vault',
+        builder: (context, state) => const MemoryVaultScreen(),
+      ),
+      GoRoute(
+        path: '/add-memory',
+        builder: (context, state) => const AddMemoryScreen(),
       ),
     ],
     redirect: (context, state) {

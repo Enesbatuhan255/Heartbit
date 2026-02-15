@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:heartbit/config/theme/app_colors.dart';
+import 'package:heartbit/config/design_tokens/design_tokens.dart';
 import 'dart:ui';
 
 class ActivityHubScreen extends ConsumerWidget {
@@ -19,43 +20,32 @@ class ActivityHubScreen extends ConsumerWidget {
           icon: const Icon(Icons.arrow_back_ios, color: AppColors.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: Text(
           'Activity Hub',
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-          ),
+          style: DesignTokens.heading4(color: AppColors.textPrimary),
         ),
         centerTitle: true,
       ),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(24.0),
+          padding: DesignTokens.padding5,
           child: Column(
             children: [
               const Spacer(),
               // Header
-              const Text(
+              Text(
                 '🎯 What\'s the plan tonight?',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
+                style: DesignTokens.heading2(color: AppColors.textPrimary),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: DesignTokens.space3),
               Text(
                 'Choose how you want to decide',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: AppColors.textSecondary,
-                ),
+                style: DesignTokens.bodyLarge(color: AppColors.textSecondary),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 48),
-              
+              const SizedBox(height: DesignTokens.space7),
+               
               // Two Cards
               Row(
                 children: [
@@ -76,7 +66,7 @@ class ActivityHubScreen extends ConsumerWidget {
                       },
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: DesignTokens.space4),
                   // Right Card: Spin the Wheel
                   Expanded(
                     child: _ModeCard(
@@ -144,7 +134,7 @@ class _ModeCardState extends State<_ModeCard> with SingleTickerProviderStateMixi
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 150),
+      duration: DesignTokens.durationFast,
     );
     _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
@@ -182,17 +172,11 @@ class _ModeCardState extends State<_ModeCard> with SingleTickerProviderStateMixi
           height: 220,
           decoration: BoxDecoration(
             gradient: widget.gradient,
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: widget.gradient.colors.first.withOpacity(0.4),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
-              ),
-            ],
+            borderRadius: DesignTokens.borderRadiusLg,
+            boxShadow: DesignTokens.shadowLg,
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: DesignTokens.borderRadiusLg,
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
               child: Container(
@@ -205,7 +189,7 @@ class _ModeCardState extends State<_ModeCard> with SingleTickerProviderStateMixi
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: DesignTokens.borderRadiusLg,
                   border: Border.all(
                     color: Colors.white.withOpacity(0.2),
                     width: 1,
@@ -219,24 +203,16 @@ class _ModeCardState extends State<_ModeCard> with SingleTickerProviderStateMixi
                       size: 56,
                       color: Colors.white,
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: DesignTokens.space4),
                     Text(
                       widget.title,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        height: 1.2,
-                      ),
+                      style: DesignTokens.heading4(color: Colors.white).copyWith(height: 1.2),
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: DesignTokens.space2),
                     Text(
                       widget.subtitle,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.white.withOpacity(0.7),
-                      ),
+                      style: DesignTokens.bodySmall(color: Colors.white.withOpacity(0.7)),
                     ),
                   ],
                 ),

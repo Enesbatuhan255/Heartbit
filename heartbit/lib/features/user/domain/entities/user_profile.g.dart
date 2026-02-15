@@ -19,6 +19,8 @@ _$UserProfileImpl _$$UserProfileImplFromJson(Map<String, dynamic> json) =>
           ? null
           : DateTime.parse(json['lastInteraction'] as String),
       isOnline: json['isOnline'] as bool? ?? false,
+      latitude: (json['latitude'] as num?)?.toDouble(),
+      longitude: (json['longitude'] as num?)?.toDouble(),
     );
 
 Map<String, dynamic> _$$UserProfileImplToJson(_$UserProfileImpl instance) =>
@@ -30,4 +32,6 @@ Map<String, dynamic> _$$UserProfileImplToJson(_$UserProfileImpl instance) =>
       'lastSeen': instance.lastSeen?.toIso8601String(),
       'lastInteraction': instance.lastInteraction?.toIso8601String(),
       'isOnline': instance.isOnline,
+      'latitude': instance.latitude,
+      'longitude': instance.longitude,
     };

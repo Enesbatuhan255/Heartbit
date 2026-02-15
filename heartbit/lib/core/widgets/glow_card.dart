@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:heartbit/config/theme/app_colors.dart';
+import 'package:heartbit/config/design_tokens/design_tokens.dart';
 import 'package:lottie/lottie.dart';
 
 /// A card with animated glow effect around its border
@@ -15,8 +16,8 @@ class GlowCard extends StatefulWidget {
     required this.child,
     this.glowColor = AppColors.primary,
     this.isPulsing = false,
-    this.borderRadius = 20,
-    this.padding = const EdgeInsets.all(20),
+    this.borderRadius = DesignTokens.radiusLg, // Default: 24px (consistent)
+    this.padding = const EdgeInsets.all(DesignTokens.space4), // Default: 16px
   });
 
   @override
@@ -33,7 +34,7 @@ class _GlowCardState extends State<GlowCard>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1500),
+      duration: DesignTokens.durationSlow, // 500ms
     );
 
     _glowAnimation = Tween<double>(begin: 0.4, end: 1.0).animate(
@@ -116,7 +117,7 @@ class _GlowCardState extends State<GlowCard>
 /// Pre-styled relationship status card
 class RelationshipStatusCard extends StatelessWidget {
   final String? emoji;
-  final String? lottieUrl; // Support Lottie
+  final String? lottieUrl;
   final String label;
   final Color color;
   final bool isActive;
@@ -135,18 +136,20 @@ class RelationshipStatusCard extends StatelessWidget {
     return GlowCard(
       glowColor: color,
       isPulsing: isActive && label == 'On Fire',
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      padding: const EdgeInsets.symmetric(
+        horizontal: DesignTokens.space5, // 24px
+        vertical: DesignTokens.space4, // 16px
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           _buildIcon(),
-          const SizedBox(height: 8),
+          const SizedBox(height: DesignTokens.space2), // 8px
           Text(
             label,
-            style: TextStyle(
+            style: DesignTokens.labelLarge(
               color: isActive ? AppColors.textPrimary : AppColors.textSecondary,
-              fontWeight: FontWeight.w600,
-              fontSize: 14,
+              weight: FontWeight.w600,
             ),
           ),
         ],
@@ -176,6 +179,87 @@ class RelationshipStatusCard extends StatelessWidget {
     return Text(
       emoji ?? '',
       style: const TextStyle(fontSize: 42),
+    );
+  }
+}
+
+/// Standard card without glow effect
+class StandardCard extends StatelessWidget {
+  final Widget child;
+  final double borderRadius;
+  final EdgeInsets padding;
+  final Color? backgroundColor;
+  final List<BoxShadow>? shadows;
+
+  const StandardCard({
+    super.key,
+    required this.child,
+    this.borderRadius = DesignTokens.radiusLg,
+    this.padding = const EdgeInsets.all(DesignTokens.space4),
+    this.backgroundColor,
+    this.shadows,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: padding,
+      decoration: BoxDecoration(
+        color: backgroundColor ?? AppColors.surface,
+        borderRadius: BorderRadius.circular(borderRadius),
+        boxShadow: shadows ?? DesignTokens.shadowMd,
+      ),
+      child: child,
+    );
+  }
+}
+
+/// Interactive card with tap effect
+class InteractiveCard extends StatefulWidget {
+  final Widget child;
+  final VoidCallback? onTap;
+  final double borderRadius;
+  final EdgeInsets padding;
+  final Color? backgroundColor;
+
+  const InteractiveCard({
+    super.key,
+    required this.child,
+    this.onTap,
+    this.borderRadius = DesignTokens.radiusLg,
+    this.padding = const EdgeInsets.all(DesignTokens.space4),
+    this.backgroundColor,
+  });
+
+  @override
+  State<InteractiveCard> createState() => _InteractiveCardState();
+}
+
+class _InteractiveCardState extends State<InteractiveCard> {
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) => setState(() => _isPressed = false),
+      onTapCancel: () => setState(() => _isPressed = false),
+      onTap: widget.onTap,
+      child: AnimatedScale(
+        scale: _isPressed ? 0.98 : 1.0,
+        duration: DesignTokens.durationFast,
+        child: Container(
+          padding: widget.padding,
+          decoration: BoxDecoration(
+            color: widget.backgroundColor ?? AppColors.surface,
+            borderRadius: BorderRadius.circular(widget.borderRadius),
+            boxShadow: _isPressed
+                ? DesignTokens.shadowSm
+                : DesignTokens.shadowMd,
+          ),
+          child: widget.child,
+        ),
+      ),
     );
   }
 }

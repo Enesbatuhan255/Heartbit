@@ -16,8 +16,8 @@ class CoupleEntity extends Equatable {
     required this.user2Id,
     required this.totalPoints,
     required this.level,
-    this.currentStreak = 0,
-    this.lastAnswerDate,
+    this.streak = 0,
+    this.lastStreakDate,
     this.eggWarmth = 0,
     this.isHatched = false,
     this.lastEggInteraction,
@@ -25,8 +25,8 @@ class CoupleEntity extends Equatable {
     required this.updatedAt,
   });
 
-  final int currentStreak;
-  final DateTime? lastAnswerDate;
+  final int streak;
+  final DateTime? lastStreakDate;
   final int eggWarmth; // 0-1000
   final bool isHatched;
   final DateTime? lastEggInteraction;

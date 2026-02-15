@@ -14,6 +14,7 @@ class AppColors {
   static const Color textSecondary = Color(0xFFA1A1AA); // Grey for subtitles
   static const Color border = Color(0xFF27272A); // Subtle border color for dark mode cards
   static const Color error = Color(0xFFCF6679);
+  static const Color success = Color(0xFF4CAF50);
 
   // New Colors
   static const Color pumpingHeart = Color(0xFFFF4B7D); // Match Primary

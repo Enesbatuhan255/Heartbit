@@ -7,7 +7,7 @@ part of 'draft_session_provider.dart';
 // **************************************************************************
 
 String _$draftSessionDataSourceHash() =>
-    r'84dbafaff2135cd46222ceb39ee0b07a6146c232';
+    r'465d7897256a0319b622ce4936c9a2c403b7ed5e';
 
 /// See also [draftSessionDataSource].
 @ProviderFor(draftSessionDataSource)
@@ -46,7 +46,7 @@ final sharedDraftSessionProvider =
 // ignore: unused_element
 typedef SharedDraftSessionRef = AutoDisposeStreamProviderRef<DraftSession?>;
 String _$draftSessionControllerHash() =>
-    r'383a3a8465b3d28315d9e41e4a6a32d76291d7d0';
+    r'3cad87326a469b54bbf069fa9ab58a26950bb61f';
 
 /// See also [DraftSessionController].
 @ProviderFor(DraftSessionController)

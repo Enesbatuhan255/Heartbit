@@ -197,12 +197,12 @@ final sessionCustomActivitiesProvider =
 
 typedef _$SessionCustomActivities = AutoDisposeNotifier<List<String>>;
 String _$swipeDeckControllerHash() =>
-    r'f8da2d74dae77bcf12e242552eeacf78b49ea4d6';
+    r'd13a95205c2025f247c3196ed1f453ab521df0c4';
 
 /// See also [SwipeDeckController].
 @ProviderFor(SwipeDeckController)
-final swipeDeckControllerProvider =
-    AsyncNotifierProvider<SwipeDeckController, List<Activity>>.internal(
+final swipeDeckControllerProvider = AutoDisposeAsyncNotifierProvider<
+    SwipeDeckController, List<Activity>>.internal(
   SwipeDeckController.new,
   name: r'swipeDeckControllerProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
@@ -212,9 +212,9 @@ final swipeDeckControllerProvider =
   allTransitiveDependencies: null,
 );
 
-typedef _$SwipeDeckController = AsyncNotifier<List<Activity>>;
+typedef _$SwipeDeckController = AutoDisposeAsyncNotifier<List<Activity>>;
 String _$swipeSessionControllerHash() =>
-    r'7ed5fa206aa3cfac604667910f481abd477d2c14';
+    r'cf25a54f5e8e367e65faa12eba600360eb218af0';
 
 /// See also [SwipeSessionController].
 @ProviderFor(SwipeSessionController)

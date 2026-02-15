@@ -61,7 +61,7 @@ final partnerMoodProvider = AutoDisposeStreamProvider<Mood?>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef PartnerMoodRef = AutoDisposeStreamProviderRef<Mood?>;
-String _$moodControllerHash() => r'f06fa860bf637906649c0f0e2e03fb17de22ba49';
+String _$moodControllerHash() => r'1c880e391531fd771101200b3474e2d714052948';
 
 /// Controller for mood actions
 ///

@@ -22,9 +22,11 @@ class _EnhancedSwipeScreenState extends ConsumerState<EnhancedSwipeScreen>
   @override
   void initState() {
     super.initState();
+    print('🎮 EnhancedSwipeScreen: initState called');
 
     // Start session when screen loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      print('🎮 EnhancedSwipeScreen: Starting session...');
       _startSession();
     });
   }
@@ -39,6 +41,9 @@ class _EnhancedSwipeScreenState extends ConsumerState<EnhancedSwipeScreen>
   @override
   void dispose() {
     _swiperController.dispose();
+    // Clear providers when screen is disposed to prevent state sharing between users
+    ref.invalidate(swipeDeckControllerProvider);
+    ref.invalidate(swipeSessionControllerProvider);
     super.dispose();
   }
 
@@ -117,6 +122,12 @@ class _EnhancedSwipeScreenState extends ConsumerState<EnhancedSwipeScreen>
                       cardsCount: deck.length,
                       isLoop: false,
                       onSwipe: (previousIndex, currentIndex, direction) {
+                        // Safety check: ensure previousIndex is valid
+                        if (previousIndex < 0 || previousIndex >= deck.length) {
+                          print('⚠️ Invalid previousIndex: $previousIndex, deck length: ${deck.length}');
+                          return false;
+                        }
+                        
                         final liked = direction == CardSwiperDirection.right;
                         _handleSwipe(deck[previousIndex], liked);
 
@@ -128,7 +139,10 @@ class _EnhancedSwipeScreenState extends ConsumerState<EnhancedSwipeScreen>
                         return true;
                       },
                       onEnd: () {
-                        setState(() => _currentIndex = deck.length);
+                        print('🎮 CardSwiper: All cards swiped');
+                        if (mounted) {
+                          setState(() => _currentIndex = deck.length);
+                        }
                       },
                       numberOfCardsDisplayed: 3,
                       backCardOffset: const Offset(0, 35),
@@ -179,8 +193,25 @@ class _EnhancedSwipeScreenState extends ConsumerState<EnhancedSwipeScreen>
   }
 
   Future<void> _handleSwipe(Activity activity, bool liked) async {
-    HapticFeedback.lightImpact();
-    await ref.read(swipeSessionControllerProvider.notifier).swipe(activity, liked);
+    try {
+      HapticFeedback.lightImpact();
+      print('🎮 Swiping: ${activity.title} - ${liked ? "RIGHT" : "LEFT"}');
+      await ref.read(swipeSessionControllerProvider.notifier).swipe(activity, liked);
+      print('✅ Swipe completed successfully');
+    } catch (e, stackTrace) {
+      print('❌ Error during swipe: $e');
+      print(stackTrace);
+      // Show error to user but don't crash
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Swipe error: $e'),
+            backgroundColor: AppColors.error,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    }
   }
 
   Widget _buildEmptyState() {

@@ -49,7 +49,7 @@ final activeStackTowerSessionProvider =
 typedef ActiveStackTowerSessionRef
     = AutoDisposeStreamProviderRef<StackTowerSession?>;
 String _$stackTowerControllerHash() =>
-    r'778eb43d01664fa9152d8b94fba5f74d59c00dfc';
+    r'87b1e4f6e88d6b15663d9a8db3e948cace635cde';
 
 /// See also [StackTowerController].
 @ProviderFor(StackTowerController)

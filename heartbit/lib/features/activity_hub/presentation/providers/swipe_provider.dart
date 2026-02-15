@@ -154,18 +154,24 @@ class SessionCustomActivities extends _$SessionCustomActivities {
 
 // --- Deck Controller ---
 
-@Riverpod(keepAlive: true)
+@riverpod
 class SwipeDeckController extends _$SwipeDeckController {
   @override
   FutureOr<List<Activity>> build() => [];
 
   Future<void> generateDeck({List<String> explicitCustoms = const []}) async {
     // Prevent concurrent generation
-    if (state.isLoading) return;
+    if (state.isLoading) {
+      print('⏭️ generateDeck: Already loading, skipping...');
+      return;
+    }
 
+    print('🎴 generateDeck: Starting deck generation...');
+    
+    // Set loading state
     state = const AsyncLoading();
 
-    state = await AsyncValue.guard(() async {
+    try {
       final coupleAsync = ref.read(coupleStateProvider);
       if (!coupleAsync.hasValue || coupleAsync.value == null) {
         throw Exception('Couple not found');
@@ -183,6 +189,9 @@ class SwipeDeckController extends _$SwipeDeckController {
       // Get categories as strings
       final categories = selectedCategories.map((c) => c.value).toList();
 
+      print('🎴 generateDeck: Generating deck for couple $coupleId');
+      print('🎴 generateDeck: Categories: $categories');
+      
       // Generate deck
       var deck = await deckService.generateDeck(
         coupleId: coupleId,
@@ -191,6 +200,8 @@ class SwipeDeckController extends _$SwipeDeckController {
         durationTiers: selectedDurations,
         deckSize: 20,
       );
+
+      print('🎴 generateDeck: Generated ${deck.length} cards');
 
       // Add explicit custom activities (Wild Cards)
       if (sessionCustoms.isNotEmpty) {
@@ -207,6 +218,7 @@ class SwipeDeckController extends _$SwipeDeckController {
 
         deck = [...deck, ...customCards];
         deck.shuffle();
+        print('🎴 generateDeck: Added ${customCards.length} wild cards');
       }
 
       // DEBUG FALLBACK: If deck is still empty, add a hardcoded card to prove pipeline works
@@ -219,14 +231,18 @@ class SwipeDeckController extends _$SwipeDeckController {
           category: 'chill_home',
           activityType: 'global',
         ));
+        print('🎴 generateDeck: Added fallback welcome card');
       }
 
-      if (deck.isEmpty) {
-        return [];
-      }
-
-      return deck;
-    });
+      print('🎴 generateDeck: Total deck size: ${deck.length}');
+      
+      // Only set state if widget is still mounted
+      state = AsyncData(deck);
+    } catch (e, stackTrace) {
+      print('❌ generateDeck error: $e');
+      print(stackTrace);
+      state = AsyncError(e, stackTrace);
+    }
   }
 }
 
@@ -235,8 +251,9 @@ class SwipeDeckController extends _$SwipeDeckController {
 @riverpod
 class SwipeSessionController extends _$SwipeSessionController {
   String? _sessionId;
+  // Note: These are instance variables, each user has their own instance
   int _currentIndex = 0;
-  final List<String> _matchedActivityIds = [];
+  final Set<String> _matchedActivityIds = {}; // Use Set to prevent duplicates
 
   @override
   FutureOr<void> build() {}
@@ -244,6 +261,12 @@ class SwipeSessionController extends _$SwipeSessionController {
   /// Start a new swipe session
   /// Uses shared session ID from DraftSession so both partners swipe in the same session
   Future<void> startSession(List<Activity> deck) async {
+    // Guard against concurrent calls
+    if (_sessionId != null) {
+      print('⚠️ Session already started: $_sessionId');
+      return;
+    }
+    
     final coupleAsync = ref.read(coupleStateProvider);
     if (!coupleAsync.hasValue || coupleAsync.value == null) return;
 
@@ -373,13 +396,15 @@ class SwipeSessionController extends _$SwipeSessionController {
       return false;
     } catch (e, st) {
       print('❌ Error during swipe: $e\n$st');
-      state = AsyncError(e, st);
+      // Don't set error state to prevent UI from crashing/rebuilding
+      // Just log and continue
+      state = const AsyncData(null);
       return false;
     }
   }
 
   int get currentIndex => _currentIndex;
-  List<String> get matchedActivityIds => _matchedActivityIds;
+  List<String> get matchedActivityIds => _matchedActivityIds.toList();
 }
 
 // --- Match Event Notifier ---

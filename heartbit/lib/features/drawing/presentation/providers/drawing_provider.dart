@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'dart:math';
 import 'package:heartbit/shared/providers/firebase_providers.dart';
@@ -141,8 +142,9 @@ class DrawingGameController extends _$DrawingGameController {
         sessionId: sessionId,
         points: points,
       );
-    } catch (_) {
-      // Ignore transient errors
+    } catch (e, st) {
+      // Log transient errors for debugging
+      debugPrint('Drawing update error: $e\n$st');
     }
   }
 

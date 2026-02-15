@@ -77,24 +77,17 @@ class TaskController extends _$TaskController {
           final coupleId = coupleAsync.value!.id;
           await ref.read(petRepositoryProvider).addExperience(coupleId, xpEarned.toDouble());
           
-          // 3. Check if ALL tasks are now completed → update streak
-          final tasksAsync = ref.read(dailyTasksProvider);
-          if (tasksAsync.hasValue) {
-            final tasks = tasksAsync.value!;
-            final allCompleted = tasks.every((t) => t.isCompleted || t.id == taskId);
-            if (allCompleted) {
-              await ref.read(taskRepositoryProvider).updateStreak(coupleId, allTasksCompleted: true);
-              
-              // 4. Check streak achievements
-              final streakAsync = ref.read(streakProvider);
-              final petAsync = ref.read(petStateProvider);
-              
-              ref.read(achievementControllerProvider.notifier).checkAchievements(
-                streak: streakAsync.valueOrNull,
-                petLevel: petAsync.valueOrNull?.level,
-              );
-            }
-          }
+          // 3. Snapchat-style: Increment streak on ANY task completion (interaction)
+          await ref.read(taskRepositoryProvider).incrementStreakOnInteraction(coupleId);
+          
+          // 4. Check streak achievements after increment
+          final streakAsync = ref.read(streakProvider);
+          final petAsync = ref.read(petStateProvider);
+          
+          ref.read(achievementControllerProvider.notifier).checkAchievements(
+            streak: streakAsync.valueOrNull,
+            petLevel: petAsync.valueOrNull?.level,
+          );
           
           // 5. Increment total tasks counter and check achievements with REAL count
           final totalTasks = await ref.read(taskRemoteDataSourceProvider).incrementTotalTasksCompleted(userId);

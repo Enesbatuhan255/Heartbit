@@ -425,7 +425,8 @@ class _FortuneWheelScreenState extends ConsumerState<FortuneWheelScreen>
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.pop(context);
-                    // TODO: Navigate to activity planning or add to plans
+                    // Navigate to bucket list for activity planning
+                    Navigator.pushNamed(context, '/bucket-list');
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,

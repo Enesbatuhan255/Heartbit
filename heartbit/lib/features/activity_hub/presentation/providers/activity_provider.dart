@@ -123,6 +123,43 @@ class MatchEvent extends _$MatchEvent {
   void clear() => state = null;
 }
 
+// --- Bucket List Controller ---
+
+@riverpod
+class BucketListController extends _$BucketListController {
+  @override
+  FutureOr<void> build() {}
+
+  Future<void> updateItemStatus(
+    String itemId,
+    String newStatus, {
+    DateTime? plannedDate,
+  }) async {
+    final coupleAsync = ref.read(coupleStateProvider);
+    
+    if (!coupleAsync.hasValue || coupleAsync.value == null) {
+      return;
+    }
+    
+    final coupleId = coupleAsync.value!.id;
+    final repo = ref.read(activityRepositoryProvider);
+
+    state = const AsyncLoading();
+    
+    try {
+      await repo.updateBucketItemStatus(
+        coupleId,
+        itemId,
+        newStatus,
+        plannedDate: plannedDate,
+      );
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+    }
+  }
+}
+
 // --- Wheel Controller ---
 
 @riverpod

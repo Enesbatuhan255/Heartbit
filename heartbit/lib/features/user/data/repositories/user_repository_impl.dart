@@ -53,4 +53,9 @@ class UserRepositoryImpl implements UserRepository {
   Future<void> updateInteraction(String uid) {
     return _remoteDataSource.updateInteraction(uid);
   }
+
+  @override
+  Future<void> updateLocation(String uid, double latitude, double longitude) {
+    return _remoteDataSource.updateLocation(uid, latitude, longitude);
+  }
 }

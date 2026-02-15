@@ -3,6 +3,19 @@ import '../../domain/entities/activity.dart';
 import '../../domain/entities/custom_activity.dart';
 import '../../domain/entities/swipe_session.dart';
 
+/// Helper method to safely parse DateTime from various formats
+DateTime? _safeParseDateTime(dynamic value) {
+  if (value == null) return null;
+  try {
+    if (value is String) return DateTime.parse(value);
+    if (value is Timestamp) return value.toDate();
+    if (value is DateTime) return value;
+    return null;
+  } catch (_) {
+    return null;
+  }
+}
+
 /// Data source for global activities (public seed data)
 abstract class GlobalActivityDataSource {
   Stream<List<Activity>> watchAll();
@@ -218,7 +231,7 @@ class SwipeSessionDataSourceImpl implements SwipeSessionDataSource {
       userId: data['userId'],
       direction: data['direction'],
       sessionId: data['sessionId'],
-      timestamp: DateTime.parse(data['timestamp']),
+      timestamp: _safeParseDateTime(data['timestamp']) ?? DateTime.now(),
     );
   }
 
@@ -270,14 +283,10 @@ class SwipeSessionDataSourceImpl implements SwipeSessionDataSource {
                 activityId: data['activityId'],
                 activityType: data['activityType'] ?? 'global',
                 activityTitle: data['activityTitle'],
-                matchedAt: DateTime.parse(data['matchedAt']),
+                matchedAt: _safeParseDateTime(data['matchedAt']) ?? DateTime.now(),
                 status: data['status'] ?? 'pending',
-                plannedDate: data['plannedDate'] != null
-                    ? DateTime.parse(data['plannedDate'])
-                    : null,
-                completedAt: data['completedAt'] != null
-                    ? DateTime.parse(data['completedAt'])
-                    : null,
+                plannedDate: _safeParseDateTime(data['plannedDate']),
+                completedAt: _safeParseDateTime(data['completedAt']),
               );
             })
             .toList();

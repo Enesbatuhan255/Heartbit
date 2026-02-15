@@ -138,6 +138,23 @@ final matchEventProvider =
 );
 
 typedef _$MatchEvent = AutoDisposeNotifier<String?>;
+String _$bucketListControllerHash() =>
+    r'68dcbbfcf79c9ed33b8d05632bde1821729d6b31';
+
+/// See also [BucketListController].
+@ProviderFor(BucketListController)
+final bucketListControllerProvider =
+    AutoDisposeAsyncNotifierProvider<BucketListController, void>.internal(
+  BucketListController.new,
+  name: r'bucketListControllerProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$bucketListControllerHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef _$BucketListController = AutoDisposeAsyncNotifier<void>;
 String _$wheelControllerHash() => r'046c8246d6cb3df0e17ffd11f52a5e05ac67b1a3';
 
 /// See also [WheelController].

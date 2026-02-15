@@ -66,7 +66,7 @@ final activeDrawingSessionProvider =
 // ignore: unused_element
 typedef ActiveDrawingSessionRef = AutoDisposeStreamProviderRef<DrawingSession?>;
 String _$drawingGameControllerHash() =>
-    r'3dfce73e3c2f9d0bbb0f00737289b163609d077f';
+    r'6940989954572215d2848011c863b463330cedfb';
 
 /// See also [DrawingGameController].
 @ProviderFor(DrawingGameController)

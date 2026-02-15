@@ -6,7 +6,7 @@ part of 'partner_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$partnerStateHash() => r'89099b336fea005bc3bc61d92846dbf7db9e25eb';
+String _$partnerStateHash() => r'e72fdfc96de03d01af32ca14dbfa53df94395fc3';
 
 /// See also [partnerState].
 @ProviderFor(partnerState)

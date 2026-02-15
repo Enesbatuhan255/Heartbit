@@ -41,11 +41,16 @@ Stream<List<StackTowerInvite>> stackTowerInvites(StackTowerInvitesRef ref) {
 
   if (userId == null) return const Stream.empty();
 
+  // Only fetch invites created within the last 2 minutes to prevent
+  // stale invites from showing up on every app launch.
+  final cutoff = DateTime.now().subtract(const Duration(minutes: 2));
+
   return firestore
       .collection('notifications')
       .where('targetUserId', isEqualTo: userId)
       .where('type', isEqualTo: 'stack_tower_invite')
       .where('sent', isEqualTo: false)
+      .where('createdAt', isGreaterThan: Timestamp.fromDate(cutoff))
       .snapshots()
       .map((snapshot) {
     final invites = snapshot.docs.map((doc) {

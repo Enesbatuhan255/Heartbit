@@ -27,6 +27,8 @@ mixin _$UserProfile {
   DateTime? get lastSeen => throw _privateConstructorUsedError;
   DateTime? get lastInteraction => throw _privateConstructorUsedError;
   bool get isOnline => throw _privateConstructorUsedError;
+  double? get latitude => throw _privateConstructorUsedError;
+  double? get longitude => throw _privateConstructorUsedError;
 
   /// Serializes this UserProfile to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -51,7 +53,9 @@ abstract class $UserProfileCopyWith<$Res> {
       String? status,
       DateTime? lastSeen,
       DateTime? lastInteraction,
-      bool isOnline});
+      bool isOnline,
+      double? latitude,
+      double? longitude});
 }
 
 /// @nodoc
@@ -76,6 +80,8 @@ class _$UserProfileCopyWithImpl<$Res, $Val extends UserProfile>
     Object? lastSeen = freezed,
     Object? lastInteraction = freezed,
     Object? isOnline = null,
+    Object? latitude = freezed,
+    Object? longitude = freezed,
   }) {
     return _then(_value.copyWith(
       uid: null == uid
@@ -106,6 +112,14 @@ class _$UserProfileCopyWithImpl<$Res, $Val extends UserProfile>
           ? _value.isOnline
           : isOnline // ignore: cast_nullable_to_non_nullable
               as bool,
+      latitude: freezed == latitude
+          ? _value.latitude
+          : latitude // ignore: cast_nullable_to_non_nullable
+              as double?,
+      longitude: freezed == longitude
+          ? _value.longitude
+          : longitude // ignore: cast_nullable_to_non_nullable
+              as double?,
     ) as $Val);
   }
 }
@@ -125,7 +139,9 @@ abstract class _$$UserProfileImplCopyWith<$Res>
       String? status,
       DateTime? lastSeen,
       DateTime? lastInteraction,
-      bool isOnline});
+      bool isOnline,
+      double? latitude,
+      double? longitude});
 }
 
 /// @nodoc
@@ -148,6 +164,8 @@ class __$$UserProfileImplCopyWithImpl<$Res>
     Object? lastSeen = freezed,
     Object? lastInteraction = freezed,
     Object? isOnline = null,
+    Object? latitude = freezed,
+    Object? longitude = freezed,
   }) {
     return _then(_$UserProfileImpl(
       uid: null == uid
@@ -178,6 +196,14 @@ class __$$UserProfileImplCopyWithImpl<$Res>
           ? _value.isOnline
           : isOnline // ignore: cast_nullable_to_non_nullable
               as bool,
+      latitude: freezed == latitude
+          ? _value.latitude
+          : latitude // ignore: cast_nullable_to_non_nullable
+              as double?,
+      longitude: freezed == longitude
+          ? _value.longitude
+          : longitude // ignore: cast_nullable_to_non_nullable
+              as double?,
     ));
   }
 }
@@ -192,7 +218,9 @@ class _$UserProfileImpl implements _UserProfile {
       this.status,
       this.lastSeen,
       this.lastInteraction,
-      this.isOnline = false});
+      this.isOnline = false,
+      this.latitude,
+      this.longitude});
 
   factory _$UserProfileImpl.fromJson(Map<String, dynamic> json) =>
       _$$UserProfileImplFromJson(json);
@@ -212,10 +240,14 @@ class _$UserProfileImpl implements _UserProfile {
   @override
   @JsonKey()
   final bool isOnline;
+  @override
+  final double? latitude;
+  @override
+  final double? longitude;
 
   @override
   String toString() {
-    return 'UserProfile(uid: $uid, displayName: $displayName, photoUrl: $photoUrl, status: $status, lastSeen: $lastSeen, lastInteraction: $lastInteraction, isOnline: $isOnline)';
+    return 'UserProfile(uid: $uid, displayName: $displayName, photoUrl: $photoUrl, status: $status, lastSeen: $lastSeen, lastInteraction: $lastInteraction, isOnline: $isOnline, latitude: $latitude, longitude: $longitude)';
   }
 
   @override
@@ -234,13 +266,17 @@ class _$UserProfileImpl implements _UserProfile {
             (identical(other.lastInteraction, lastInteraction) ||
                 other.lastInteraction == lastInteraction) &&
             (identical(other.isOnline, isOnline) ||
-                other.isOnline == isOnline));
+                other.isOnline == isOnline) &&
+            (identical(other.latitude, latitude) ||
+                other.latitude == latitude) &&
+            (identical(other.longitude, longitude) ||
+                other.longitude == longitude));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(runtimeType, uid, displayName, photoUrl,
-      status, lastSeen, lastInteraction, isOnline);
+      status, lastSeen, lastInteraction, isOnline, latitude, longitude);
 
   /// Create a copy of UserProfile
   /// with the given fields replaced by the non-null parameter values.
@@ -266,7 +302,9 @@ abstract class _UserProfile implements UserProfile {
       final String? status,
       final DateTime? lastSeen,
       final DateTime? lastInteraction,
-      final bool isOnline}) = _$UserProfileImpl;
+      final bool isOnline,
+      final double? latitude,
+      final double? longitude}) = _$UserProfileImpl;
 
   factory _UserProfile.fromJson(Map<String, dynamic> json) =
       _$UserProfileImpl.fromJson;
@@ -285,6 +323,10 @@ abstract class _UserProfile implements UserProfile {
   DateTime? get lastInteraction;
   @override
   bool get isOnline;
+  @override
+  double? get latitude;
+  @override
+  double? get longitude;
 
   /// Create a copy of UserProfile
   /// with the given fields replaced by the non-null parameter values.

@@ -11,6 +11,7 @@ abstract class UserRemoteDataSource {
   Future<void> updateLastSeen(String uid);
   Future<void> updatePhotoUrl(String uid, String photoUrl);
   Future<void> updateInteraction(String uid);
+  Future<void> updateLocation(String uid, double latitude, double longitude);
 }
 
 class UserRemoteDataSourceImpl implements UserRemoteDataSource {
@@ -73,6 +74,15 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
   Future<void> updateInteraction(String uid) async {
     await _usersCollection.doc(uid).update({
       'lastInteraction': Timestamp.now(),
+      'updatedAt': Timestamp.now(),
+    });
+  }
+
+  @override
+  Future<void> updateLocation(String uid, double latitude, double longitude) async {
+    await _usersCollection.doc(uid).update({
+      'latitude': latitude,
+      'longitude': longitude,
       'updatedAt': Timestamp.now(),
     });
   }

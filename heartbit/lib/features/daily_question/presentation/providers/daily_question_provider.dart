@@ -7,6 +7,7 @@ import 'package:heartbit/features/daily_question/domain/entities/daily_question.
 import 'package:heartbit/features/daily_question/domain/repositories/daily_question_repository.dart';
 import 'package:heartbit/features/daily_question/data/datasources/daily_question_remote_datasource.dart';
 import 'package:heartbit/features/daily_question/data/repositories/daily_question_repository_impl.dart';
+import 'package:heartbit/features/task/presentation/providers/task_provider.dart';
 import 'package:heartbit/features/egg/presentation/providers/egg_provider.dart';
 
 part 'daily_question_provider.g.dart';
@@ -112,6 +113,9 @@ class DailyQuestionController extends _$DailyQuestionController {
       // ADDED: Individual effort heat
       await ref.read(eggRepositoryProvider).incrementWarmth(couple.id, 10);
 
+      // ADDED: Snapchat-style streak increment on interaction
+      await ref.read(taskRepositoryProvider).incrementStreakOnInteraction(couple.id);
+
       state = const AsyncData(null);
       return true;
     } catch (e, st) {
@@ -156,6 +160,10 @@ class DailyQuestionController extends _$DailyQuestionController {
         isUser1: isUser1,
         reaction: reaction,
       );
+      
+      // ADDED: Snapchat-style streak increment on interaction
+      await ref.read(taskRepositoryProvider).incrementStreakOnInteraction(couple.id);
+      
       return true;
     } catch (e) {
       print('DEBUG: Failed to submit reaction: $e');

@@ -11,6 +11,9 @@ abstract class TaskRemoteDataSource {
   Stream<int> watchStreak(String coupleId);
   Future<void> updateStreak(String coupleId, {required bool allTasksCompleted});
   
+  /// Snapchat-style: Increment streak on any daily interaction
+  Future<void> incrementStreakOnInteraction(String coupleId);
+  
   /// Increment and return total tasks completed (all-time counter)
   Future<int> incrementTotalTasksCompleted(String userId);
   
@@ -210,7 +213,20 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
 
   @override
   Future<void> updateStreak(String coupleId, {required bool allTasksCompleted}) async {
+    // Snapchat-style: Streak increases on ANY interaction, not just all tasks completed
+    await incrementStreakOnInteraction(coupleId);
+  }
+
+  /// Snapchat-style streak: Increments when user has ANY daily interaction
+  /// Streak continues if there was interaction yesterday, resets if missed a day
+  @override
+  Future<void> incrementStreakOnInteraction(String coupleId) async {
     final docRef = _coupleDoc(coupleId);
+    final interactionDocRef = _firestore
+        .collection('couples')
+        .doc(coupleId)
+        .collection('daily_interactions')
+        .doc('today');
     
     await _firestore.runTransaction((transaction) async {
       final snapshot = await transaction.get(docRef);
@@ -223,31 +239,47 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
       // Use UTC for all date comparisons
       final now = DateTime.now().toUtc();
       final today = DateTime.utc(now.year, now.month, now.day);
+      final yesterday = today.subtract(const Duration(days: 1));
       
-      // Already updated today?
+      // Check if already updated today
       if (lastStreakDate != null) {
         final lastDate = DateTime.utc(lastStreakDate.year, lastStreakDate.month, lastStreakDate.day);
-        if (lastDate == today) return; // Already processed today
         
-        // Check if yesterday was completed (streak continues) or not (reset)
-        final yesterday = today.subtract(const Duration(days: 1));
+        if (lastDate == today) {
+          // Already interacted today - don't increment again, but mark interaction
+          transaction.update(interactionDocRef, {
+            'hasInteraction': true,
+            'lastInteractionAt': Timestamp.fromDate(DateTime.now().toUtc()),
+          });
+          return;
+        }
+        
+        // Check if yesterday had interaction (streak continues) or not (reset)
         if (lastDate != yesterday) {
-          // Gap > 1 day: Streak broken - reset to 0 or 1 depending on completion
+          // Gap > 1 day: Streak broken - reset to 1 (new streak starts today)
           transaction.update(docRef, {
-            'streak': allTasksCompleted ? 1 : 0,
+            'streak': 1,
             'lastStreakDate': Timestamp.fromDate(today),
+          });
+          transaction.set(interactionDocRef, {
+            'hasInteraction': true,
+            'date': Timestamp.fromDate(today),
+            'lastInteractionAt': Timestamp.fromDate(DateTime.now().toUtc()),
           });
           return;
         }
       }
       
-      if (allTasksCompleted) {
-        // Increment streak (yesterday was completed or first time)
-        transaction.update(docRef, {
-          'streak': currentStreak + 1,
-          'lastStreakDate': Timestamp.fromDate(today),
-        });
-      }
+      // Increment streak (yesterday had interaction or first time)
+      transaction.update(docRef, {
+        'streak': currentStreak + 1,
+        'lastStreakDate': Timestamp.fromDate(today),
+      });
+      transaction.set(interactionDocRef, {
+        'hasInteraction': true,
+        'date': Timestamp.fromDate(today),
+        'lastInteractionAt': Timestamp.fromDate(DateTime.now().toUtc()),
+      });
     });
   }
 

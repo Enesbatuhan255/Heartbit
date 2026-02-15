@@ -33,4 +33,9 @@ class TaskRepositoryImpl implements TaskRepository {
   Future<void> updateStreak(String coupleId, {required bool allTasksCompleted}) {
     return _remoteDataSource.updateStreak(coupleId, allTasksCompleted: allTasksCompleted);
   }
+
+  @override
+  Future<void> incrementStreakOnInteraction(String coupleId) {
+    return _remoteDataSource.incrementStreakOnInteraction(coupleId);
+  }
 }

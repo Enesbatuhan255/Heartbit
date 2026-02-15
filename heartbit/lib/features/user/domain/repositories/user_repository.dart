@@ -10,4 +10,5 @@ abstract class UserRepository {
   Future<String> uploadProfileImage(String uid, String filePath);
   Future<void> updateProfilePhoto(String uid, String photoUrl);
   Future<void> updateInteraction(String uid);
+  Future<void> updateLocation(String uid, double latitude, double longitude);
 }

@@ -14,6 +14,8 @@ class UserProfile with _$UserProfile {
     DateTime? lastSeen,
     DateTime? lastInteraction,
     @Default(false) bool isOnline,
+    double? latitude,
+    double? longitude,
   }) = _UserProfile;
 
   factory UserProfile.fromJson(Map<String, dynamic> json) => _$UserProfileFromJson(json);

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:heartbit/features/auth/presentation/providers/auth_provider.dart';
 import 'package:heartbit/features/user/presentation/providers/user_provider.dart';
 import 'package:heartbit/features/user/presentation/providers/partner_provider.dart';
+import 'package:location/location.dart';
 
 /// Manages presence (online status) and interaction (heartbeat bursts).
 /// It updates the user's `lastSeen` periodically and calculates the
@@ -27,6 +28,8 @@ class _PresenceManagerState extends ConsumerState<PresenceManager> {
   // Animation speed state
   double _currentSpeed = 1.0;
   DateTime? _lastPartnerInteraction;
+  
+  final Location _location = Location();
 
   @override
   void initState() {
@@ -58,6 +61,42 @@ class _PresenceManagerState extends ConsumerState<PresenceManager> {
       } catch (e) {
         debugPrint('Failed to update presence: $e');
       }
+      
+      // Also update location (best effort, don't block presence)
+      _updateLocation(userId);
+    }
+  }
+
+  Future<void> _updateLocation(String userId) async {
+    try {
+      // Check if location services are enabled
+      bool serviceEnabled = await _location.serviceEnabled();
+      if (!serviceEnabled) {
+        serviceEnabled = await _location.requestService();
+        if (!serviceEnabled) return;
+      }
+
+      // Check permission
+      PermissionStatus permission = await _location.hasPermission();
+      if (permission == PermissionStatus.denied) {
+        permission = await _location.requestPermission();
+        if (permission != PermissionStatus.granted &&
+            permission != PermissionStatus.grantedLimited) return;
+      }
+      if (permission == PermissionStatus.deniedForever) return;
+
+      // Get current position
+      final locationData = await _location.getLocation();
+
+      if (locationData.latitude != null && locationData.longitude != null) {
+        await ref.read(userRepositoryProvider).updateLocation(
+          userId,
+          locationData.latitude!,
+          locationData.longitude!,
+        );
+      }
+    } catch (e) {
+      debugPrint('Failed to update location: $e');
     }
   }
 

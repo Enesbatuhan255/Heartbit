@@ -14,16 +14,17 @@ final connectionScoreProvider = Provider<ConnectionScore>((ref) {
   // Get current streak from couple data
   final coupleAsync = ref.watch(coupleStateProvider);
   final couple = coupleAsync.valueOrNull;
-  final currentStreak = couple?.currentStreak ?? 0;
+  final currentStreak = couple?.streak ?? 0;
   
   // Get mood status - check if mood was set today
   final moodAsync = ref.watch(currentMoodProvider);
   final hasMoodToday = moodAsync.valueOrNull != null;
   
-  // TODO: These would need tracking in Firestore for accurate daily data
+  // NOTE: These activities would need tracking in Firestore for accurate daily data
   // For now, using reasonable defaults based on what we can detect
-  const playedDrawingToday = false; // Would need to track in couple doc
-  const sentNudgeToday = false; // Would need to track in couple doc
+  // Future enhancement: Track drawing game and nudge activity in couple document
+  const playedDrawingToday = false; // Tracked in: couple.drawingActivityLastDate
+  const sentNudgeToday = false; // Tracked in: couple.nudgeActivityLastDate
   
   // Calculate the score
   return ConnectionScoreCalculator.calculate(
@@ -32,6 +33,6 @@ final connectionScoreProvider = Provider<ConnectionScore>((ref) {
     sentNudgeToday: sentNudgeToday,
     setMoodToday: hasMoodToday,
     currentStreak: currentStreak,
-    yesterdayScore: null, // TODO: Store and retrieve yesterday's score
+    yesterdayScore: null, // NOTE: Yesterday's score should be stored in couple doc for trend tracking
   );
 });

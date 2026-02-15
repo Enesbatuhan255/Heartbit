@@ -16,4 +16,7 @@ abstract class TaskRepository {
   
   /// Update streak when tasks are completed
   Future<void> updateStreak(String coupleId, {required bool allTasksCompleted});
+  
+  /// Snapchat-style: Increment streak on any daily interaction
+  Future<void> incrementStreakOnInteraction(String coupleId);
 }

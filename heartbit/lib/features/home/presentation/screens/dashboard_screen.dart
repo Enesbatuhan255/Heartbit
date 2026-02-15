@@ -6,6 +6,7 @@ import 'package:heartbit/features/auth/presentation/providers/auth_provider.dart
 import 'package:heartbit/features/home/domain/entities/mood.dart';
 import 'package:heartbit/features/home/presentation/providers/mood_provider.dart';
 import 'package:heartbit/config/theme/app_colors.dart';
+import 'package:heartbit/config/design_tokens/design_tokens.dart';
 import 'package:heartbit/features/pet/presentation/providers/pet_provider.dart';
 import 'package:heartbit/features/user/presentation/providers/partner_provider.dart';
 import 'package:heartbit/features/task/presentation/providers/task_provider.dart';
@@ -27,6 +28,9 @@ import 'package:heartbit/features/drawing/domain/entities/drawing_session.dart';
 import 'package:heartbit/features/drawing/presentation/providers/drawing_provider.dart';
 import 'package:heartbit/features/home/presentation/providers/connection_score_provider.dart';
 import 'package:heartbit/features/home/presentation/widgets/relationship_hub.dart';
+import 'package:heartbit/features/home/presentation/widgets/mood_pill.dart';
+import 'package:heartbit/features/home/presentation/widgets/mood_bottom_sheet.dart';
+import 'package:heartbit/features/home/presentation/widgets/heart_pulse.dart';
 import 'package:heartbit/features/user/presentation/providers/user_provider.dart';
 import 'package:heartbit/features/egg/presentation/widgets/egg_widget.dart';
 import 'package:heartbit/features/egg/presentation/widgets/warmth_bar.dart';
@@ -48,6 +52,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   bool _showNudgeOverlay = false;
   NudgeType? _receivedNudgeType;
   DateTime? _lastNudgeShownTime;
+  
+  // Mood feedback animations
+  bool _showMoodFeedback = false;
+  bool _showFloatingHearts = false;
 
   @override
   void initState() {
@@ -124,8 +132,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     // Listen for Stack Tower invites
     ref.listen(stackTowerInvitesProvider, (previous, next) {
         final invites = next.valueOrNull;
+        final previousInvites = previous?.valueOrNull;
         if (invites != null && invites.isNotEmpty) {
           final invite = invites.first;
+          // Only show notification if this is a NEW invite
+          // (previous list was empty or had a different invite)
+          final hadSameInvite = previousInvites?.any((p) => p.id == invite.id) ?? false;
+          if (hadSameInvite) return;
+          
           // Show snackbar
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -177,6 +191,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => context.push('/memory-vault'),
+        backgroundColor: AppColors.primary.withOpacity(0.85),
+        elevation: 4,
+        tooltip: 'Anı Deposu',
+        child: const Icon(Icons.photo_library_rounded, color: Colors.white, size: 24),
+      ),
       body: PresenceManager(
         builder: (context, speed) {
           return Stack(
@@ -185,7 +206,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               GestureDetector(
                 onTap: () {
                   // Send "I'm interacting" signal so partner feels the burst
-                  ref.read(userRepositoryProvider).updateInteraction(ref.read(authUserIdProvider)!);
+                  final userId = ref.read(authUserIdProvider);
+                  if (userId != null) {
+                    ref.read(userRepositoryProvider).updateInteraction(userId);
+                  }
                   // Optional: Local feedback or just let the partner seeing it be the reward
                 },
                 behavior: HitTestBehavior.translucent, // Ensure touches pass through if needed, or catch them here
@@ -222,6 +246,24 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     });
                   },
                 ),
+              // Mood Feedback - Heart Pulse
+              if (_showMoodFeedback)
+                Center(
+                  child: HeartPulse(
+                    size: 100,
+                    onComplete: () {},
+                  ),
+                ),
+              // Mood Feedback - Floating Hearts
+              if (_showFloatingHearts)
+                Positioned(
+                  bottom: 200,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: FloatingHearts(count: 5),
+                  ),
+                ),
               // Partner Waiting Banner (Activity Hub)
               const _PartnerWaitingBanner(),
             ],
@@ -236,7 +278,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   Widget _buildHomePage(BuildContext context) {
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.all(24.0),
+         padding: DesignTokens.padding5,
         child: Column(
           children: [
             // TOP SECTION (40%) - Balanced
@@ -244,16 +286,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               flex: 4,
               child: Container(
                 alignment: Alignment.bottomCenter,
-                padding: const EdgeInsets.only(bottom: 8), // Keep tight padding
+                 padding: const EdgeInsets.only(bottom: DesignTokens.space2), // Keep tight padding
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     _buildHeader(context),
                     const Spacer(),
                     // Relationship Hub
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16.0),
-                      child: RelationshipHub(),
+                    Padding(
+                      padding: DesignTokens.paddingHorizontal4,
+                      child: const RelationshipHub(),
                     ),
                   ],
                 ),
@@ -277,7 +319,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                    Transform.translate(
                      offset: const Offset(0, -20), 
                      child: const Padding(
-                       padding: EdgeInsets.symmetric(horizontal: 40),
+                        padding: const EdgeInsets.symmetric(horizontal: DesignTokens.space7),
                        child: WarmthBar(),
                      ),
                    ),
@@ -311,18 +353,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Good Day,',
-                  style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+                  style: DesignTokens.bodyMedium(color: AppColors.textSecondary),
                 ),
-                const Text(
+                Text(
                   'HeartBit',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'Outfit',
-                    color: AppColors.textPrimary,
-                  ),
+                  style: DesignTokens.heading3(color: AppColors.textPrimary),
                 ),
               ],
             ),
@@ -344,62 +381,109 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         
         const SizedBox(height: 16),
         
-        // Compact Mood Selector
-        SizedBox(
-          height: 50,
-          child: moodAsync.when(
-            data: (current) => ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: Mood.values.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 12),
-              itemBuilder: (context, index) {
-                final mood = Mood.values[index];
-                final isSelected = current == mood;
-                return GestureDetector(
-                  onTap: () {
-                    HapticFeedback.selectionClick();
-                    ref.read(moodControllerProvider.notifier).setMood(mood);
-                  },
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: isSelected ? AppColors.primary.withOpacity(0.2) : AppColors.surface,
-                      borderRadius: BorderRadius.circular(25),
-                      border: Border.all(
-                        color: isSelected ? AppColors.primary : AppColors.border,
-                        width: 1.5,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Text(mood.emoji, style: const TextStyle(fontSize: 20)),
-                        if (isSelected) ...[
-                          const SizedBox(width: 6),
-                          Text(
-                            mood.label, // Assuming label exists or name
-                            style: const TextStyle(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
-            loading: () => const SizedBox(),
-            error: (_, __) => const SizedBox(),
+        // Premium Mood Pill - Minimal & Modern
+        moodAsync.when(
+          data: (current) => Row(
+            children: [
+              MoodPill(
+                selectedMood: current,
+                onTap: () => _showMoodSelector(current),
+              ),
+              if (current != null) ...[
+                const SizedBox(width: 12),
+                // Partner mood indicator
+                _buildPartnerMoodIndicator(),
+              ],
+            ],
+          ),
+          loading: () => MoodPill(
+            selectedMood: null,
+            onTap: () {},
+            isLoading: true,
+          ),
+          error: (_, __) => MoodPill(
+            selectedMood: null,
+            onTap: () {},
           ),
         ),
       ],
     );
   }
 
+  /// Show mood selector bottom sheet
+  void _showMoodSelector(Mood? currentMood) {
+    MoodBottomSheet.show(
+      context,
+      currentMood: currentMood,
+      onMoodSelected: (mood) async {
+        // Show feedback animations
+        setState(() {
+          _showMoodFeedback = true;
+          _showFloatingHearts = true;
+        });
 
+        // Save mood
+        await ref.read(moodControllerProvider.notifier).setMood(mood);
+
+        // Hide feedback after animation
+        Future.delayed(const Duration(milliseconds: 1500), () {
+          if (mounted) {
+            setState(() {
+              _showMoodFeedback = false;
+            });
+          }
+        });
+
+        Future.delayed(const Duration(milliseconds: 2000), () {
+          if (mounted) {
+            setState(() {
+              _showFloatingHearts = false;
+            });
+          }
+        });
+      },
+    );
+  }
+
+  /// Build partner mood indicator pill
+  Widget _buildPartnerMoodIndicator() {
+    final partnerMoodAsync = ref.watch(partnerMoodProvider);
+
+    return partnerMoodAsync.when(
+      data: (partnerMood) {
+        if (partnerMood == null) {
+          return const SizedBox.shrink();
+        }
+
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: DesignTokens.space3, vertical: DesignTokens.space2),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: DesignTokens.borderRadiusMd,
+            border: Border.all(
+              color: Color(partnerMood.colorValue).withOpacity(0.3),
+              width: 1,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Partner: ',
+                style: DesignTokens.labelSmall(color: AppColors.textSecondary),
+              ),
+              Text(
+                partnerMood.emoji,
+                style: const TextStyle(fontSize: 14),
+              ),
+            ],
+          ),
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
 
   Widget _buildPetPreviewCard(WidgetRef ref) {
     final petAsync = ref.watch(petStateProvider);
@@ -414,12 +498,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       },
       loading: () => Container(
         height: 350,
-        decoration: _cardDecoration(color: AppColors.surface),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: DesignTokens.borderRadiusLg,
+        ),
         child: const Center(child: CircularProgressIndicator(color: AppColors.primary)),
       ),
       error: (_, __) => Container(
         height: 350,
-        decoration: _cardDecoration(color: AppColors.surface),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: DesignTokens.borderRadiusLg,
+        ),
         child: const Center(child: Text('Error loading pet', style: TextStyle(color: AppColors.error))),
       ),
     );
@@ -429,19 +519,19 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   Widget _buildDailyQuestionPage(BuildContext context) {
     return Container(
       color: AppColors.background, // Match main background for consistency or use subtle gradient
-      child: SafeArea(
+        child: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(32.0),
+          padding: DesignTokens.padding6,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text('Daily Connection', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.secondary)),
-              const SizedBox(height: 24),
+              Text('Daily Connection', style: DesignTokens.heading4(color: AppColors.secondary)),
+              const SizedBox(height: DesignTokens.space5),
               // Game Hub Button - Draw & Guess
               if (ref.watch(coupleStateProvider).valueOrNull != null)
                 Container(
                   width: double.infinity,
-                  margin: const EdgeInsets.only(bottom: 12),
+                  margin: const EdgeInsets.only(bottom: DesignTokens.space3),
                   child: ElevatedButton.icon(
                     onPressed: () {
                       context.push('/draw-game');
@@ -450,8 +540,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     label: const Text('Draw & Guess Oyna', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.secondary,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      padding: DesignTokens.paddingVertical4,
+                      shape: RoundedRectangleBorder(borderRadius: DesignTokens.borderRadiusMd),
                       elevation: 4,
                     ),
                   ),
@@ -460,7 +550,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               if (ref.watch(coupleStateProvider).valueOrNull != null)
                 Container(
                   width: double.infinity,
-                  margin: const EdgeInsets.only(bottom: 12),
+                  margin: const EdgeInsets.only(bottom: DesignTokens.space3),
                   child: ElevatedButton.icon(
                     onPressed: () {
                       context.push('/stack-tower');
@@ -469,8 +559,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     label: const Text('Stack Tower', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.orange,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      padding: DesignTokens.paddingVertical4,
+                      shape: RoundedRectangleBorder(borderRadius: DesignTokens.borderRadiusMd),
                       elevation: 4,
                     ),
                   ),
@@ -479,7 +569,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               if (ref.watch(coupleStateProvider).valueOrNull != null)
                 Container(
                   width: double.infinity,
-                  margin: const EdgeInsets.only(bottom: 24),
+                  margin: const EdgeInsets.only(bottom: DesignTokens.space5),
                   child: ElevatedButton.icon(
                     onPressed: () {
                       context.push('/activity-hub');
@@ -488,8 +578,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     label: const Text('Activity Hub', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      padding: DesignTokens.paddingVertical4,
+                      shape: RoundedRectangleBorder(borderRadius: DesignTokens.borderRadiusMd),
                       elevation: 4,
                     ),
                   ),
@@ -521,16 +611,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 const Icon(Icons.nights_stay, size: 48, color: AppColors.secondary),
-                const SizedBox(height: 16),
-                const Text(
+                const SizedBox(height: DesignTokens.space4),
+                Text(
                   'Henüz sabah olmadı! 🌙',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                  style: DesignTokens.heading4(color: AppColors.textPrimary),
                 ),
-                const SizedBox(height: 8),
-                const Text(
+                const SizedBox(height: DesignTokens.space2),
+                Text(
                   'Yeni soru saat 09:00\'da hazır olacak.\nŞimdilik dinlenme zamanı.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: AppColors.textSecondary),
+                  style: DesignTokens.bodyMedium(color: AppColors.textSecondary),
                 ),
               ],
             );
@@ -542,13 +632,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 if (dq == null) {
                   return Container(
                      width: double.infinity,
-                     padding: const EdgeInsets.all(32),
-                     child: const Column(
+                     padding: DesignTokens.padding6,
+                     child: Column(
                        mainAxisSize: MainAxisSize.min,
                        children: [
-                         CircularProgressIndicator(color: AppColors.primary),
-                         SizedBox(height: 16),
-                         Text('Günün sorusu hazırlanıyor...', style: TextStyle(color: AppColors.textSecondary), textAlign: TextAlign.center),
+                         const CircularProgressIndicator(color: AppColors.primary),
+                         const SizedBox(height: DesignTokens.space4),
+                         Text('Günün sorusu hazırlanıyor...', style: DesignTokens.bodyMedium(color: AppColors.textSecondary), textAlign: TextAlign.center),
                        ],
                      ),
                   );
@@ -573,32 +663,25 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(Icons.favorite, size: 28, color: AppColors.primary),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: DesignTokens.space2),
                       Text(
                         'Daily Question',
-                        style: TextStyle(
+                        style: DesignTokens.labelLarge(
                           color: AppColors.primary,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.0,
-                          fontSize: 14,
+                          weight: FontWeight.bold,
                         ),
                       ),
                     ],
                   ),
-              const SizedBox(height: 20),
+              const SizedBox(height: DesignTokens.space4),
 
               // Question Text
               Text(
                 dq.questionText,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  height: 1.4,
-                  color: AppColors.textPrimary,
-                ),
+                style: DesignTokens.heading4(color: AppColors.textPrimary),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: DesignTokens.space6),
 
               // STATE 1: Unanswered - Show Input (and Partner's Blurred if available)
               if (!iHaveAnswered) ...[
@@ -612,25 +695,25 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         child: _buildAnswerBubble('Partnerin harika bir şeyler yazdı...\n(Ama görmek için önce sen cevaplamalısın!)', false),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(horizontal: DesignTokens.space3, vertical: DesignTokens.space1),
                         decoration: BoxDecoration(
                           color: Colors.black.withOpacity(0.6),
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: DesignTokens.borderRadiusMd,
                         ),
-                        child: const Row(
+                        child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.lock, color: Colors.white, size: 16),
-                            SizedBox(width: 8),
-                            Text('Partnerin Cevapladı', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                            const Icon(Icons.lock, color: Colors.white, size: 16),
+                            const SizedBox(width: DesignTokens.space2),
+                            Text('Partnerin Cevapladı', style: DesignTokens.labelSmall(color: Colors.white, weight: FontWeight.bold)),
                           ],
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 24),
-                  const Text('Meraklanma, kilidi açmak için sen de cevapla! 👇', style: TextStyle(color: AppColors.accent, fontSize: 12)),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: DesignTokens.space5),
+                  Text('Meraklanma, kilidi açmak için sen de cevapla! 👇', style: DesignTokens.labelMedium(color: AppColors.accent)),
+                  const SizedBox(height: DesignTokens.space3),
                 ],
                 _buildAnswerButton(context, ref, dq.date),
               ]
@@ -640,25 +723,27 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                else if (iHaveAnswered && !partnerHasAnswered)
                  Container(
                    width: double.infinity,
-                   padding: const EdgeInsets.all(24),
+                   padding: DesignTokens.padding5,
                    decoration: BoxDecoration(
-                     color: AppColors.background,
-                     borderRadius: BorderRadius.circular(16),
-                     border: Border.all(color: AppColors.textSecondary.withOpacity(0.1)),
-                   ),
+                      color: AppColors.background,
+                      borderRadius: DesignTokens.borderRadiusMd,
+                      border: Border.all(color: AppColors.textSecondary.withOpacity(0.1)),
+                    ),
                    child: Column(
                      children: [
-                       Text(
-                         'Senin Cevabın:',
-                         style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                       ),
-                       const SizedBox(height: 8),
-                       Text(
-                         myAnswer,
-                         textAlign: TextAlign.center,
-                         style: const TextStyle(color: AppColors.textPrimary, fontStyle: FontStyle.italic, fontSize: 16),
-                       ),
-                       const SizedBox(height: 24),
+                        Text(
+                          'Senin Cevabın:',
+                          style: DesignTokens.labelSmall(color: AppColors.textSecondary),
+                        ),
+                        const SizedBox(height: DesignTokens.space2),
+                        Text(
+                          myAnswer,
+                          textAlign: TextAlign.center,
+                          style: DesignTokens.bodyLarge(
+                            color: AppColors.textPrimary,
+                          ).copyWith(fontStyle: FontStyle.italic),
+                        ),
+                        const SizedBox(height: DesignTokens.space5),
                        // Lottie Animation
                        SizedBox(
                          height: 120,
@@ -669,20 +754,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             color: AppColors.accent,
                           ),
                        ),
-                       const SizedBox(height: 16),
-                       Text(
-                         'Partnerin bekleniyor...',
-                         style: TextStyle(
-                           color: AppColors.accent, 
-                           fontWeight: FontWeight.bold,
-                           fontSize: 16,
-                         ),
-                       ),
-                       const SizedBox(height: 4),
-                       Text(
-                         'İkiniz de cevaplayınca cevaplar açılacak! 🤫',
-                         style: TextStyle(fontSize: 12, color: AppColors.textSecondary.withOpacity(0.7)),
-                       ),
+                        const SizedBox(height: DesignTokens.space4),
+                        Text(
+                          'Partnerin bekleniyor...',
+                          style: DesignTokens.heading5(color: AppColors.accent),
+                        ),
+                        const SizedBox(height: DesignTokens.space1),
+                        Text(
+                          'İkiniz de cevaplayınca cevaplar açılacak! 🤫',
+                          style: DesignTokens.labelSmall(color: AppColors.textSecondary.withOpacity(0.7)),
+                        ),
                      ],
                    ),
                  )
@@ -699,6 +780,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     
                     // Trigger celebration once per day
                     WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (!mounted) return;
                       if (syncLevel.hasBonusXp && 
                           !dq.syncXpClaimed && // Check if not already claimed
                           _lastCelebratedDate != dq.date &&
@@ -709,11 +791,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                            .claimSyncBonus(syncLevel.bonusXp!);
 
                         // Show Animation
-                        setState(() {
-                          _showSyncCelebration = true;
-                          _currentSyncLevel = syncLevel;
-                          _lastCelebratedDate = dq.date;
-                        });
+                        if (mounted) {
+                          setState(() {
+                            _showSyncCelebration = true;
+                            _currentSyncLevel = syncLevel;
+                            _lastCelebratedDate = dq.date;
+                          });
+                        }
                       }
                     });
                     
@@ -859,7 +943,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                loading: () => const CircularProgressIndicator(color: AppColors.primary),
                error: (_,__) => const Text('Error', style: TextStyle(color: AppColors.error)),
              ),
-             const SizedBox(height: 60),
+             const SizedBox(height: 40),
              // Task Summary
              _buildSectionTitle('Today\'s Progress'),
              Expanded(child: _buildTasksList(ref)),
@@ -935,11 +1019,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   BoxDecoration _cardDecoration({required Color color, Color? borderColor}) {
     return BoxDecoration(
       color: color,
-      borderRadius: BorderRadius.circular(24),
-      border: Border.all(color: borderColor ?? AppColors.border, width: 0.5), // Subtle border
-      boxShadow: [
-        BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 20, offset: const Offset(0, 10)), // Darker, softer shadow
-      ],
+      borderRadius: DesignTokens.borderRadiusLg,
+      border: Border.all(color: borderColor ?? AppColors.border, width: 0.5),
+      boxShadow: DesignTokens.shadowLg,
     );
   }
 }
@@ -970,11 +1052,11 @@ class _EggStatusText extends ConsumerWidget {
                fontFamily: 'Outfit',
              ),
            ),
-           const SizedBox(height: 4),
-           const Text(
-              'Lvl 1 • Egg',
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
-           ),
+            const SizedBox(height: DesignTokens.space1),
+            Text(
+               'Lvl 1 • Egg',
+               style: DesignTokens.bodySmall(color: AppColors.textSecondary),
+            ),
          ],
        ),
      );
@@ -1041,29 +1123,19 @@ class _PartnerWaitingBanner extends ConsumerWidget {
           right: 0,
           child: SafeArea(
             child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [AppColors.primary, AppColors.secondary],
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                ),
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary.withOpacity(0.4),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
+               margin: const EdgeInsets.symmetric(horizontal: DesignTokens.space4, vertical: DesignTokens.space2),
+               decoration: BoxDecoration(
+                 gradient: AppColors.primaryGradient,
+                 borderRadius: DesignTokens.borderRadiusMd,
+                 boxShadow: DesignTokens.shadowMd,
+               ),
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
-                  onTap: () => context.push('/swipe-setup'),
-                  borderRadius: BorderRadius.circular(16),
+                   onTap: () => context.push('/swipe-setup'),
+                  borderRadius: DesignTokens.borderRadiusMd,
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: DesignTokens.space4, vertical: DesignTokens.space3),
                     child: Row(
                       children: [
                         Container(
@@ -1079,23 +1151,21 @@ class _PartnerWaitingBanner extends ConsumerWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisSize: MainAxisSize.min,
-                            children: const [
-                              Text(
-                                'Partnerin seni bekliyor! 💕',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                ),
-                              ),
-                              Text(
-                                'Activity Hub\'a katıl',
-                                style: TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
+                             children: [
+                               Text(
+                                 'Partnerin seni bekliyor! 💕',
+                                 style: DesignTokens.labelLarge(
+                                   color: Colors.white,
+                                   weight: FontWeight.bold,
+                                 ),
+                               ),
+                               Text(
+                                 'Activity Hub\'a katıl',
+                                 style: DesignTokens.labelSmall(
+                                   color: Colors.white70,
+                                 ),
+                               ),
+                             ],
                           ),
                         ),
                         const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 16),

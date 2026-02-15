@@ -21,6 +21,11 @@ Stream<UserProfile?> partnerState(PartnerStateRef ref) {
       // Determine partner ID
       final partnerId = couple.user1Id == user ? couple.user2Id : couple.user1Id;
       
+      // Validate partner ID
+      if (partnerId == null || partnerId.isEmpty || partnerId == user) {
+        return const Stream.empty();
+      }
+      
       return ref.watch(userRepositoryProvider).watchUser(partnerId);
     },
     loading: () => const Stream.empty(),

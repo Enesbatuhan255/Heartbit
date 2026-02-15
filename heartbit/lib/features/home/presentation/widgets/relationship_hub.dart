@@ -1,7 +1,7 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import 'package:heartbit/config/theme/app_colors.dart';
 import 'package:heartbit/features/home/presentation/providers/connection_score_provider.dart';
 import 'package:heartbit/features/user/presentation/providers/partner_provider.dart';
@@ -10,6 +10,7 @@ import 'package:heartbit/features/nudge/domain/entities/nudge_type.dart';
 import 'package:heartbit/features/home/presentation/providers/mood_provider.dart';
 import 'package:heartbit/features/home/presentation/providers/pulse_control_provider.dart';
 import 'package:heartbit/features/home/domain/entities/mood.dart';
+import 'package:heartbit/features/user/presentation/providers/distance_provider.dart';
 
 class RelationshipHub extends ConsumerWidget {
   const RelationshipHub({super.key});
@@ -18,6 +19,7 @@ class RelationshipHub extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final score = ref.watch(connectionScoreProvider);
     final partnerAsync = ref.watch(partnerStateProvider);
+    final distanceAsync = ref.watch(partnerDistanceProvider);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12), // Reduced padding
@@ -108,7 +110,7 @@ class RelationshipHub extends ConsumerWidget {
                          Text(
                           '${score.todayScore}%',
                           style: TextStyle(
-                            fontSize: 28, // Smaller font (32 -> 28)
+                            fontSize: 28,
                             fontWeight: FontWeight.bold,
                             color: score.todayScore >= 70 ? Colors.green : AppColors.primary,
                             height: 1.0,
@@ -122,6 +124,34 @@ class RelationshipHub extends ConsumerWidget {
                     Text(
                       'Bağlılık Skoru', 
                       style: TextStyle(color: AppColors.textSecondary.withOpacity(0.8), fontSize: 11),
+                    ),
+                    // Distance display - compact inline
+                    const SizedBox(height: 4),
+                    distanceAsync.when(
+                      data: (distance) {
+                        return Row(
+                          children: [
+                            Icon(
+                              Icons.location_on,
+                              color: distance != null ? AppColors.accent : AppColors.textSecondary.withOpacity(0.5),
+                              size: 12,
+                            ),
+                            const SizedBox(width: 3),
+                            Text(
+                              distance != null
+                                  ? '${_formatDistance(distance)} uzaklıkta'
+                                  : 'Konum bekleniyor...',
+                              style: TextStyle(
+                                color: distance != null ? AppColors.accent : AppColors.textSecondary.withOpacity(0.5),
+                                fontSize: 10,
+                                fontWeight: distance != null ? FontWeight.w600 : FontWeight.w400,
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                      loading: () => const SizedBox.shrink(),
+                      error: (_, __) => const SizedBox.shrink(),
                     ),
                   ],
                 ),
@@ -173,8 +203,17 @@ class RelationshipHub extends ConsumerWidget {
       ),
     );
   }
-}
 
+  String _formatDistance(double distanceKm) {
+    if (distanceKm < 1.0) {
+      return '${(distanceKm * 1000).round()} m';
+    } else if (distanceKm < 10.0) {
+      return '${distanceKm.toStringAsFixed(1)} km';
+    } else {
+      return '${distanceKm.round()} km';
+    }
+  }
+}
 class _HubNudgeButton extends StatelessWidget {
   final NudgeType type;
   final VoidCallback onTap;
@@ -210,3 +249,5 @@ class _HubNudgeButton extends StatelessWidget {
     );
   }
 }
+
+

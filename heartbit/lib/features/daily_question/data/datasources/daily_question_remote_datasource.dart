@@ -125,11 +125,9 @@ class DailyQuestionRemoteDataSourceImpl implements DailyQuestionRemoteDataSource
   }) async {
     return _firestore.runTransaction((tx) async {
       final questionRef = _questionsRef(coupleId).doc(date);
-      final coupleRef = _firestore.collection('couples').doc(coupleId);
       
       // ===== ALL READS FIRST =====
       final questionSnap = await tx.get(questionRef);
-      final coupleSnap = await tx.get(coupleRef);
 
       if (!questionSnap.exists) {
         throw Exception('Question not found for date: $date');
@@ -138,43 +136,6 @@ class DailyQuestionRemoteDataSourceImpl implements DailyQuestionRemoteDataSource
       final qData = questionSnap.data()!;
       if (qData['locked'] == true) {
         throw LockedQuestionException('Cannot submit answer: question is locked');
-      }
-
-      // Check if this completes the question (Both answered)
-      final otherHasAnswered = isUser1 
-          ? qData['user2Answer'] != null 
-          : qData['user1Answer'] != null;
-
-      // Calculate streak if needed
-      int? newStreak;
-      if (otherHasAnswered && coupleSnap.exists) {
-        final cData = coupleSnap.data()!;
-        final lastAnswerDate = (cData['lastAnswerDate'] as Timestamp?)?.toDate();
-        final currentStreak = (cData['currentStreak'] as num?)?.toInt() ?? 0;
-        
-        // Parse 'date' (yyyy-MM-dd) to DateTime
-        final questionDate = DateFormat('yyyy-MM-dd').parse(date);
-        
-        if (lastAnswerDate == null) {
-          newStreak = 1;
-        } else {
-          // Check difference in days (ignoring time)
-          final lastDateStart = DateTime(lastAnswerDate.year, lastAnswerDate.month, lastAnswerDate.day);
-          final questionDateStart = DateTime(questionDate.year, questionDate.month, questionDate.day);
-          
-          final diff = questionDateStart.difference(lastDateStart).inDays;
-          
-          if (diff == 0) {
-            // Already updated for today
-            newStreak = currentStreak;
-          } else if (diff == 1) {
-            // Consecutive day
-            newStreak = currentStreak + 1;
-          } else {
-            // Missed a day or more
-            newStreak = 1;
-          }
-        }
       }
 
       // ===== ALL WRITES AFTER READS =====
@@ -188,14 +149,6 @@ class DailyQuestionRemoteDataSourceImpl implements DailyQuestionRemoteDataSource
       }
 
       tx.update(questionRef, updateData);
-
-      // Update couple streak if both answered
-      if (otherHasAnswered && newStreak != null) {
-        tx.update(coupleRef, {
-          'lastAnswerDate': FieldValue.serverTimestamp(),
-          'currentStreak': newStreak,
-        });
-      }
     });
   }
 

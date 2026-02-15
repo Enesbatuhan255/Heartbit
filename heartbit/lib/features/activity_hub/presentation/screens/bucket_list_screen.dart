@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:heartbit/config/theme/app_colors.dart';
+import 'package:heartbit/config/design_tokens/design_tokens.dart';
+import 'package:heartbit/core/widgets/empty_states.dart';
 import '../providers/activity_provider.dart';
 import '../../domain/entities/bucket_item.dart';
 
@@ -21,25 +23,24 @@ class BucketListScreen extends ConsumerWidget {
           icon: const Icon(Icons.arrow_back_ios, color: AppColors.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: Text(
           'Bucket List 💕',
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.bold,
-          ),
+          style: DesignTokens.heading4(color: AppColors.textPrimary),
         ),
         centerTitle: true,
       ),
       body: bucketListAsync.when(
         data: (bucketItems) {
           if (bucketItems.isEmpty) {
-            return _buildEmptyState(context);
+            return EmptyBucketListState(
+              onAddItem: () => Navigator.pop(context),
+            );
           }
 
           return activitiesAsync.when(
             data: (activities) {
               return ListView.builder(
-                padding: const EdgeInsets.all(16),
+                padding: DesignTokens.padding4,
                 itemCount: bucketItems.length,
                 itemBuilder: (context, index) {
                   final item = bucketItems[index];
@@ -53,8 +54,9 @@ class BucketListScreen extends ConsumerWidget {
                     activityTitle: activity.title,
                     activityDescription: activity.description,
                     activityImageUrl: activity.imageUrl,
-                    onStatusChange: (newStatus) {
-                      // TODO: Implement status change
+                    onStatusChange: (newStatus) async {
+                      await ref.read(bucketListControllerProvider.notifier)
+                          .updateItemStatus(item.id, newStatus);
                     },
                   );
                 },
@@ -63,74 +65,23 @@ class BucketListScreen extends ConsumerWidget {
             loading: () => const Center(
               child: CircularProgressIndicator(color: AppColors.primary),
             ),
-            error: (e, _) => Center(
-              child: Text('Error: $e', style: const TextStyle(color: AppColors.error)),
+            error: (e, _) => ErrorState(
+              message: 'Error: $e',
+              onRetry: () => ref.refresh(bucketListProvider),
             ),
           );
         },
         loading: () => const Center(
           child: CircularProgressIndicator(color: AppColors.primary),
         ),
-        error: (e, _) => Center(
-          child: Text('Error: $e', style: const TextStyle(color: AppColors.error)),
+        error: (e, _) => ErrorState(
+          message: 'Error: $e',
+          onRetry: () => ref.refresh(bucketListProvider),
         ),
       ),
     );
   }
 
-  Widget _buildEmptyState(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.favorite_border,
-              size: 80,
-              color: AppColors.textSecondary.withOpacity(0.5),
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              'Your Bucket List is Empty',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Swipe right on activities you both love!\nWhen you match, they\'ll appear here.',
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColors.textSecondary,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 32),
-            ElevatedButton.icon(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              icon: const Icon(Icons.swipe, color: Colors.white),
-              label: const Text(
-                'Start Swiping',
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 class _BucketItemCard extends StatelessWidget {
@@ -151,28 +102,22 @@ class _BucketItemCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: DesignTokens.space4),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: DesignTokens.borderRadiusMd,
         border: Border.all(
           color: _getStatusColor().withOpacity(0.3),
           width: 2,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        boxShadow: DesignTokens.shadowMd,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Image Header
           ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(DesignTokens.radiusMd)),
             child: Stack(
               children: [
                 Image.network(
@@ -188,20 +133,19 @@ class _BucketItemCard extends StatelessWidget {
                 ),
                 // Status Badge
                 Positioned(
-                  top: 12,
-                  right: 12,
+                  top: DesignTokens.space3,
+                  right: DesignTokens.space3,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: DesignTokens.space3, vertical: DesignTokens.space1),
                     decoration: BoxDecoration(
                       color: _getStatusColor(),
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: DesignTokens.borderRadiusMd,
                     ),
                     child: Text(
                       _getStatusText(),
-                      style: const TextStyle(
+                      style: DesignTokens.labelSmall(
                         color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
+                        weight: FontWeight.bold,
                       ),
                     ),
                   ),
@@ -212,29 +156,22 @@ class _BucketItemCard extends StatelessWidget {
 
           // Content
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: DesignTokens.padding4,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   activityTitle,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                  ),
+                  style: DesignTokens.heading4(color: AppColors.textPrimary),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: DesignTokens.space1),
                 Text(
                   activityDescription,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: AppColors.textSecondary,
-                  ),
+                  style: DesignTokens.bodyMedium(color: AppColors.textSecondary),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: DesignTokens.space3),
                 
                 // Action Buttons
                 Row(
@@ -246,7 +183,7 @@ class _BucketItemCard extends StatelessWidget {
                         color: AppColors.primary,
                         onTap: () => onStatusChange('planned'),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: DesignTokens.space2),
                     ],
                     if (item.isPlanned) ...[
                       _buildActionButton(
@@ -255,12 +192,11 @@ class _BucketItemCard extends StatelessWidget {
                         color: AppColors.accent,
                         onTap: () => onStatusChange('completed'),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: DesignTokens.space2),
                     ],
                     Text(
                       'Matched ${_formatDate(item.matchedAt)}',
-                      style: TextStyle(
-                        fontSize: 12,
+                      style: DesignTokens.labelSmall(
                         color: AppColors.textSecondary.withOpacity(0.7),
                       ),
                     ),
@@ -283,23 +219,22 @@ class _BucketItemCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: DesignTokens.space3, vertical: DesignTokens.space2),
         decoration: BoxDecoration(
           color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: DesignTokens.borderRadiusMd,
           border: Border.all(color: color.withOpacity(0.3)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(icon, size: 16, color: color),
-            const SizedBox(width: 4),
+            const SizedBox(width: DesignTokens.space1),
             Text(
               label,
-              style: TextStyle(
+              style: DesignTokens.labelSmall(
                 color: color,
-                fontWeight: FontWeight.w600,
-                fontSize: 12,
+                weight: FontWeight.w600,
               ),
             ),
           ],

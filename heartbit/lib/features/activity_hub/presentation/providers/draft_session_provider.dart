@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:heartbit/features/auth/presentation/providers/auth_provider.dart';
 import 'package:heartbit/features/pairing/presentation/providers/pairing_provider.dart';
+import 'package:heartbit/shared/providers/firebase_providers.dart';
 import '../../domain/entities/draft_session.dart';
 import '../../data/datasources/draft_session_data_source.dart';
 
@@ -9,7 +10,7 @@ part 'draft_session_provider.g.dart';
 
 @riverpod
 DraftSessionDataSource draftSessionDataSource(DraftSessionDataSourceRef ref) {
-  return DraftSessionDataSource(FirebaseFirestore.instance);
+  return DraftSessionDataSource(ref.read(firebaseFirestoreProvider));
 }
 
 @riverpod
@@ -102,7 +103,8 @@ class DraftSessionController extends _$DraftSessionController {
   Future<void> _sendPartnerNotification(String coupleId, String partnerId) async {
     try {
       print('📤 _sendPartnerNotification: Creating notification for partnerId=$partnerId');
-      final docRef = await FirebaseFirestore.instance
+      final firestore = ref.read(firebaseFirestoreProvider);
+      final docRef = await firestore
           .collection('notifications')
           .add({
         'type': 'activity_hub_invite',
@@ -167,7 +169,8 @@ class DraftSessionController extends _$DraftSessionController {
   Future<void> _sendLobbyEntryNotification(String coupleId, String partnerId) async {
     try {
       print('📤 _sendLobbyEntryNotification: Sending to $partnerId');
-      await FirebaseFirestore.instance
+      final firestore = ref.read(firebaseFirestoreProvider);
+      await firestore
           .collection('notifications')
           .add({
         'type': 'activity_hub_lobby_entry',
