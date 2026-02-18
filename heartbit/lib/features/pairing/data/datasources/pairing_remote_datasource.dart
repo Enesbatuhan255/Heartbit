@@ -6,7 +6,7 @@ import '../models/couple_model.dart';
 abstract class PairingRemoteDataSource {
   Future<String> generatePairingCode(String userId);
   Future<String?> validatePairingCode(String code);
-  Future<CoupleModel> createCouple(String user1Id, String user2Id);
+  Future<CoupleModel> createCouple(String user1Id, String user2Id, String code);
   Future<String?> getCurrentPairingCode(String userId);
   Future<void> cancelPairingCode(String userId);
   Future<CoupleModel?> getCoupleForUser(String userId);
@@ -76,44 +76,62 @@ class PairingRemoteDataSourceImpl implements PairingRemoteDataSource {
   }
 
   @override
-  Future<CoupleModel> createCouple(String user1Id, String user2Id) async {
+  Future<CoupleModel> createCouple(String user1Id, String user2Id, String code) async {
     final now = DateTime.now();
+    final codeUpper = code.toUpperCase();
     final coupleRef = _couplesCollection.doc();
 
-    final coupleData = {
-      'user1Id': user1Id,
-      'user2Id': user2Id,
-      'totalPoints': 0,
-      'level': 1,
-      'eggWarmth': 0,
-      'isHatched': false,
-      'createdAt': Timestamp.fromDate(now),
-      'updatedAt': Timestamp.fromDate(now),
-    };
+    await _firestore.runTransaction((tx) async {
+      final user1Ref = _usersCollection.doc(user1Id);
+      final user2Ref = _usersCollection.doc(user2Id);
+      final user1Doc = await tx.get(user1Ref);
+      final user2Doc = await tx.get(user2Ref);
 
-    // Use batch to update all documents atomically
-    final batch = _firestore.batch();
+      if (!user1Doc.exists || !user2Doc.exists) {
+        throw Exception('User profile not found');
+      }
 
-    // Create couple document
-    batch.set(coupleRef, coupleData);
+      final user1Data = user1Doc.data() ?? {};
+      final user2Data = user2Doc.data() ?? {};
 
-    // Update both users with coupleId and clear pairing codes
-    // Using set with merge:true to create doc if it doesn't exist
-    batch.set(_usersCollection.doc(user1Id), {
-      'coupleId': coupleRef.id,
-      'pairingCode': null,
-      'pairingCodeExpiresAt': null,
-      'updatedAt': Timestamp.now(),
-    }, SetOptions(merge: true));
+      if (user1Data['coupleId'] != null || user2Data['coupleId'] != null) {
+        throw Exception('One of the users is already paired');
+      }
 
-    batch.set(_usersCollection.doc(user2Id), {
-      'coupleId': coupleRef.id,
-      'pairingCode': null,
-      'pairingCodeExpiresAt': null,
-      'updatedAt': Timestamp.now(),
-    }, SetOptions(merge: true));
+      final partnerCode = user2Data['pairingCode'] as String?;
+      final expiresAt = user2Data['pairingCodeExpiresAt'] as Timestamp?;
+      if (partnerCode == null || expiresAt == null || expiresAt.toDate().isBefore(DateTime.now())) {
+        throw Exception('Invalid or expired pairing code');
+      }
+      if (partnerCode.toUpperCase() != codeUpper) {
+        throw Exception('Pairing code mismatch');
+      }
 
-    await batch.commit();
+      final coupleData = {
+        'user1Id': user1Id,
+        'user2Id': user2Id,
+        'totalPoints': 0,
+        'level': 1,
+        'eggWarmth': 0,
+        'isHatched': false,
+        'createdAt': Timestamp.fromDate(now),
+        'updatedAt': Timestamp.fromDate(now),
+      };
+
+      tx.set(coupleRef, coupleData);
+      tx.set(user1Ref, {
+        'coupleId': coupleRef.id,
+        'pairingCode': null,
+        'pairingCodeExpiresAt': null,
+        'updatedAt': Timestamp.now(),
+      }, SetOptions(merge: true));
+      tx.set(user2Ref, {
+        'coupleId': coupleRef.id,
+        'pairingCode': null,
+        'pairingCodeExpiresAt': null,
+        'updatedAt': Timestamp.now(),
+      }, SetOptions(merge: true));
+    });
 
     return CoupleModel(
       id: coupleRef.id,

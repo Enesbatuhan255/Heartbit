@@ -1,0 +1,170 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isSelf(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function userDoc(userId) {
+      return get(/databases/$(database)/documents/users/$(userId));
+    }
+
+    function userExists(userId) {
+      return exists(/databases/$(database)/documents/users/$(userId));
+    }
+
+    function currentCoupleId() {
+      return userExists(request.auth.uid) ? userDoc(request.auth.uid).data.coupleId : null;
+    }
+
+    function isCoupleMember(coupleId) {
+      return isSignedIn() &&
+        currentCoupleId() != null &&
+        currentCoupleId() == coupleId;
+    }
+
+    function isPartnerWith(userId) {
+      return isSignedIn() &&
+        userId != request.auth.uid &&
+        userExists(userId) &&
+        currentCoupleId() != null &&
+        userDoc(userId).data.coupleId == currentCoupleId();
+    }
+
+    function canReadPairingCandidate() {
+      return isSignedIn() &&
+        currentCoupleId() == null &&
+        resource.data.coupleId == null &&
+        resource.data.pairingCode is string &&
+        resource.data.pairingCodeExpiresAt is timestamp &&
+        resource.data.pairingCodeExpiresAt > request.time;
+    }
+
+    function canLinkPartnerUser(userId) {
+      return isSignedIn() &&
+        userId != request.auth.uid &&
+        userExists(request.auth.uid) &&
+        userExists(userId) &&
+        currentCoupleId() == null &&
+        userDoc(userId).data.coupleId == null &&
+        userDoc(userId).data.pairingCode is string &&
+        userDoc(userId).data.pairingCodeExpiresAt is timestamp &&
+        userDoc(userId).data.pairingCodeExpiresAt > request.time &&
+        request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'coupleId',
+          'pairingCode',
+          'pairingCodeExpiresAt',
+          'updatedAt'
+        ]) &&
+        request.resource.data.coupleId is string &&
+        request.resource.data.pairingCode == null &&
+        request.resource.data.pairingCodeExpiresAt == null;
+    }
+
+    match /users/{userId} {
+      allow create: if isSelf(userId);
+      allow read: if isSelf(userId) || isPartnerWith(userId) || canReadPairingCandidate();
+      allow update: if isSelf(userId) || canLinkPartnerUser(userId);
+      allow delete: if isSelf(userId);
+    }
+
+    match /users/{userId}/notifications/{notificationId} {
+      allow create: if isSignedIn() && (isSelf(userId) || isPartnerWith(userId));
+      allow read, update, delete: if isSelf(userId);
+    }
+
+    match /couples/{coupleId} {
+      allow create: if isSignedIn() &&
+        request.resource.data.user1Id is string &&
+        request.resource.data.user2Id is string &&
+        (request.resource.data.user1Id == request.auth.uid ||
+          request.resource.data.user2Id == request.auth.uid);
+      allow read, update, delete: if isCoupleMember(coupleId);
+    }
+
+    match /couples/{coupleId}/{document=**} {
+      allow read, write: if isCoupleMember(coupleId);
+    }
+
+    match /notifications/{notificationId} {
+      allow create: if isSignedIn() &&
+        request.resource.data.fromUserId == request.auth.uid &&
+        request.resource.data.targetUserId is string &&
+        request.resource.data.coupleId is string &&
+        request.resource.data.coupleId == currentCoupleId() &&
+        request.resource.data.targetUserId != request.auth.uid &&
+        request.resource.data.title is string &&
+        request.resource.data.body is string &&
+        request.resource.data.type is string &&
+        exists(/databases/$(database)/documents/couples/$(request.resource.data.coupleId)) &&
+        (
+          (
+            get(/databases/$(database)/documents/couples/$(request.resource.data.coupleId)).data.user1Id == request.auth.uid &&
+            request.resource.data.targetUserId ==
+              get(/databases/$(database)/documents/couples/$(request.resource.data.coupleId)).data.user2Id
+          ) ||
+          (
+            get(/databases/$(database)/documents/couples/$(request.resource.data.coupleId)).data.user2Id == request.auth.uid &&
+            request.resource.data.targetUserId ==
+              get(/databases/$(database)/documents/couples/$(request.resource.data.coupleId)).data.user1Id
+          )
+        );
+
+      allow read: if isSignedIn() &&
+        (resource.data.targetUserId == request.auth.uid ||
+          resource.data.fromUserId == request.auth.uid);
+
+      allow update: if isSignedIn() &&
+        (resource.data.targetUserId == request.auth.uid ||
+          resource.data.fromUserId == request.auth.uid) &&
+        request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'read',
+          'readAt',
+          'sent',
+          'dismissedAt'
+        ]);
+
+      allow delete: if false;
+    }
+
+    match /drawing_sessions/{sessionId} {
+      allow create: if isSignedIn() &&
+        request.resource.data.coupleId is string &&
+        isCoupleMember(request.resource.data.coupleId);
+      allow read, update, delete: if isSignedIn() &&
+        resource.data.coupleId is string &&
+        isCoupleMember(resource.data.coupleId);
+    }
+
+    match /stack_tower_sessions/{sessionId} {
+      allow create: if isSignedIn() &&
+        request.resource.data.coupleId is string &&
+        isCoupleMember(request.resource.data.coupleId);
+      allow read, update, delete: if isSignedIn() &&
+        resource.data.coupleId is string &&
+        isCoupleMember(resource.data.coupleId);
+    }
+
+    match /pets/{coupleId} {
+      allow read, write: if isCoupleMember(coupleId);
+    }
+
+    match /global_activities/{activityId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
+    match /activities/{activityId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

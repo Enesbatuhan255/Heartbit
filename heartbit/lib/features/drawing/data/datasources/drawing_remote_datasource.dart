@@ -139,7 +139,7 @@ class DrawingRemoteDataSourceImpl implements DrawingRemoteDataSource {
       'active': true, 
     });
 
-    print('[DrawingGame] createSession: Created new session ${session.id} with word ${session.secretWord}');
+    print('[DrawingGame] createSession: Created new session ${session.id}');
     return session;
   }
 
@@ -248,7 +248,7 @@ class DrawingRemoteDataSourceImpl implements DrawingRemoteDataSource {
       final secret = normalize(data['secretWord'] as String);
       final userGuess = normalize(guess);
       
-      print('[DrawingGame] submitGuess: secret="$secret", userGuess="$userGuess", match=${secret == userGuess}');
+      print('[DrawingGame] submitGuess: guess submitted, match=${secret == userGuess}');
       
       // ===== ALL WRITES AFTER READS =====
       if (secret == userGuess) {

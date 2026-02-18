@@ -1,0 +1,34 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isSelf(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isCoupleMember(coupleId) {
+      return isSignedIn() &&
+        firestore.exists(/databases/(default)/documents/users/$(request.auth.uid)) &&
+        firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.coupleId == coupleId;
+    }
+
+    match /profile_photos/{userId}/{allPaths=**} {
+      allow read: if isSignedIn();
+      allow create, update: if isSelf(userId) && request.resource.size < 5 * 1024 * 1024;
+      allow delete: if isSelf(userId);
+    }
+
+    match /memories/{coupleId}/{allPaths=**} {
+      allow read: if isCoupleMember(coupleId);
+      allow create, update: if isCoupleMember(coupleId) && request.resource.size < 15 * 1024 * 1024;
+      allow delete: if isCoupleMember(coupleId);
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

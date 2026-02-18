@@ -25,6 +25,7 @@ class JoinWithCodeUseCase {
     return await _repository.joinWithCode(
       currentUserId: currentUserId,
       partnerUserId: partnerUserId,
+      code: code,
     );
   }
 }

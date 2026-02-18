@@ -5,6 +5,65 @@ admin.initializeApp();
 
 const db = admin.firestore();
 const messaging = admin.messaging();
+const MAX_TITLE_LENGTH = 120;
+const MAX_BODY_LENGTH = 500;
+
+type SafeNotificationPayload = {
+    targetUserId: string;
+    fromUserId: string;
+    coupleId: string;
+    type: string;
+    title: string;
+    body: string;
+    sessionId: string;
+};
+
+async function validateNotificationPayload(data: FirebaseFirestore.DocumentData): Promise<SafeNotificationPayload | null> {
+    const targetUserId = typeof data.targetUserId === "string" ? data.targetUserId.trim() : "";
+    const fromUserId = typeof data.fromUserId === "string" ? data.fromUserId.trim() : "";
+    const coupleId = typeof data.coupleId === "string" ? data.coupleId.trim() : "";
+    const type = typeof data.type === "string" ? data.type.trim() : "general";
+    const title = typeof data.title === "string" ? data.title.trim() : "HeartBit";
+    const body = typeof data.body === "string" ? data.body.trim() : "Yeni bir bildirim var!";
+    const sessionId = typeof data.sessionId === "string" ? data.sessionId.trim() : "";
+
+    if (!targetUserId || !fromUserId || !coupleId) {
+        return null;
+    }
+
+    if (targetUserId === fromUserId) {
+        return null;
+    }
+
+    if (title.length > MAX_TITLE_LENGTH || body.length > MAX_BODY_LENGTH) {
+        return null;
+    }
+
+    const coupleDoc = await db.collection("couples").doc(coupleId).get();
+    if (!coupleDoc.exists) {
+        return null;
+    }
+
+    const coupleData = coupleDoc.data() ?? {};
+    const user1Id = coupleData.user1Id as string | undefined;
+    const user2Id = coupleData.user2Id as string | undefined;
+    const validPair = (fromUserId === user1Id && targetUserId === user2Id) ||
+        (fromUserId === user2Id && targetUserId === user1Id);
+
+    if (!validPair) {
+        return null;
+    }
+
+    return {
+        targetUserId,
+        fromUserId,
+        coupleId,
+        type,
+        title,
+        body,
+        sessionId,
+    };
+}
 
 /**
  * Cloud Function that sends FCM push notification when a new notification
@@ -22,10 +81,20 @@ export const sendPushNotification = functions.firestore
             return null;
         }
 
-        const targetUserId = data.targetUserId as string;
-        const title = data.title as string || "HeartBit";
-        const body = data.body as string || "Yeni bir bildirim var!";
-        const notificationType = data.type as string;
+        const safePayload = await validateNotificationPayload(data);
+        if (!safePayload) {
+            await snapshot.ref.update({
+                sent: false,
+                rejected: true,
+                error: "Invalid notification payload or unauthorized sender/target pair",
+            });
+            return null;
+        }
+
+        const targetUserId = safePayload.targetUserId;
+        const title = safePayload.title;
+        const body = safePayload.body;
+        const notificationType = safePayload.type;
 
         console.log(`Sending notification to user: ${targetUserId}`);
         console.log(`Type: ${notificationType}, Title: ${title}`);
@@ -55,8 +124,8 @@ export const sendPushNotification = functions.firestore
             data: {
                 type: notificationType || "general",
                 notificationId: context.params.notificationId,
-                coupleId: data.coupleId || "",
-                sessionId: data.sessionId || "",
+                coupleId: safePayload.coupleId,
+                sessionId: safePayload.sessionId,
                 click_action: "FLUTTER_NOTIFICATION_CLICK",
             },
             android: {

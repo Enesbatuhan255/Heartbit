@@ -22,10 +22,12 @@ class PairingRepositoryImpl implements PairingRepository {
   Future<CoupleEntity> joinWithCode({
     required String currentUserId,
     required String partnerUserId,
+    required String code,
   }) async {
     final coupleModel = await _remoteDataSource.createCouple(
       currentUserId,
       partnerUserId,
+      code,
     );
     return coupleModel.toEntity();
   }

@@ -91,7 +91,7 @@ class DraftSessionController extends _$DraftSessionController {
         // Send FCM notification to partner when becoming ready
         final partnerId = userId == couple.user1Id ? couple.user2Id : couple.user1Id;
         print('✅ toggleReady: Sending notification to partnerId=$partnerId');
-        _sendPartnerNotification(couple.id, partnerId);
+        _sendPartnerNotification(couple.id, partnerId, userId);
       }
       
       print('✅ toggleReady: New readyUsers list=$list');
@@ -100,7 +100,7 @@ class DraftSessionController extends _$DraftSessionController {
   }
   
   /// Creates a notification document that triggers a Cloud Function to send FCM
-  Future<void> _sendPartnerNotification(String coupleId, String partnerId) async {
+  Future<void> _sendPartnerNotification(String coupleId, String partnerId, String fromUserId) async {
     try {
       print('📤 _sendPartnerNotification: Creating notification for partnerId=$partnerId');
       final firestore = ref.read(firebaseFirestoreProvider);
@@ -109,6 +109,7 @@ class DraftSessionController extends _$DraftSessionController {
           .add({
         'type': 'activity_hub_invite',
         'targetUserId': partnerId,
+        'fromUserId': fromUserId,
         'coupleId': coupleId,
         'title': 'Partnerin seni bekliyor! 💕',
         'body': 'Activity Hub\'a katıl ve birlikte seçim yapın!',
@@ -146,7 +147,7 @@ class DraftSessionController extends _$DraftSessionController {
         
         // Notify partner
         final partnerId = userId == couple.user1Id ? couple.user2Id : couple.user1Id;
-        _sendLobbyEntryNotification(couple.id, partnerId);
+        _sendLobbyEntryNotification(couple.id, partnerId, userId);
       }
       return current.copyWith(lobbyUsers: list);
     });
@@ -166,7 +167,7 @@ class DraftSessionController extends _$DraftSessionController {
   }
   
   /// Send notification when entering lobby
-  Future<void> _sendLobbyEntryNotification(String coupleId, String partnerId) async {
+  Future<void> _sendLobbyEntryNotification(String coupleId, String partnerId, String fromUserId) async {
     try {
       print('📤 _sendLobbyEntryNotification: Sending to $partnerId');
       final firestore = ref.read(firebaseFirestoreProvider);
@@ -175,6 +176,7 @@ class DraftSessionController extends _$DraftSessionController {
           .add({
         'type': 'activity_hub_lobby_entry',
         'targetUserId': partnerId,
+        'fromUserId': fromUserId,
         'coupleId': coupleId,
         'title': 'Partnerin Activity Hub\'da! 🎯',
         'body': 'Birlikte aktivite seçmek için katıl!',
