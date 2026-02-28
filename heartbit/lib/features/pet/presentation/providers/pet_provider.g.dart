@@ -42,11 +42,11 @@ final petRepositoryProvider = AutoDisposeProvider<PetRepository>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef PetRepositoryRef = AutoDisposeProviderRef<PetRepository>;
-String _$petStateHash() => r'70f3412d8211d6732f230983ee8bd4a467464dbc';
+String _$petStateHash() => r'e76a184345b28b532b7138b477ce02c363e1e236';
 
 /// See also [petState].
 @ProviderFor(petState)
-final petStateProvider = AutoDisposeStreamProvider<Pet?>.internal(
+final petStateProvider = StreamProvider<Pet?>.internal(
   petState,
   name: r'petStateProvider',
   debugGetCreateSourceHash:
@@ -57,7 +57,7 @@ final petStateProvider = AutoDisposeStreamProvider<Pet?>.internal(
 
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
-typedef PetStateRef = AutoDisposeStreamProviderRef<Pet?>;
+typedef PetStateRef = StreamProviderRef<Pet?>;
 String _$petControllerHash() => r'11bf798fd3e2f6afcd0842ad5e431e7667a21a6c';
 
 /// See also [PetController].

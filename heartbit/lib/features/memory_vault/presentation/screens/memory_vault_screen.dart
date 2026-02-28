@@ -4,14 +4,26 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
-import 'package:heartbit/config/theme/app_colors.dart';
-import 'package:heartbit/config/design_tokens/design_tokens.dart';
-import 'package:heartbit/core/widgets/empty_states.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../providers/memory_vault_provider.dart';
 import '../../domain/entities/memory.dart';
 
+// ─── Premium palette (aynı dashboard ile tutarlı) ────────────────────────
+class _P {
+  static const bg = Color(0xFFFDF6F0);
+  static const surface = Color(0xFFFFFFFF);
+  static const border = Color(0x18000000); // %9 black
+  static const gold = Color(0xFFC8A96E);
+  static const gold2 = Color(0xFFE8C87E);
+  static const text = Color(0xFF2D2B3D); // deep purple-gray
+  static const muted = Color(0x592D2B3D); // %35 text
+  static const error = Color(0xFFEF4444);
+}
+
 class MemoryVaultScreen extends ConsumerStatefulWidget {
-  const MemoryVaultScreen({super.key});
+  final VoidCallback? onBack;
+
+  const MemoryVaultScreen({super.key, this.onBack});
 
   @override
   ConsumerState<MemoryVaultScreen> createState() => _MemoryVaultScreenState();
@@ -23,108 +35,108 @@ class _MemoryVaultScreenState extends ConsumerState<MemoryVaultScreen> {
   Future<void> _pickAndAddMemory() async {
     final picker = ImagePicker();
     XFile? image;
-    
+
     try {
       image = await picker.pickImage(
         source: ImageSource.gallery,
-        imageQuality: 70, // Compress image quality to 70%
-        maxWidth: 1024,   // Resize image if wider than 1024px
+        imageQuality: 70,
+        maxWidth: 1024,
       );
     } catch (e) {
-      debugPrint('Error picking image: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Galeri açılırken hata oluştu: $e'), backgroundColor: AppColors.error),
+          SnackBar(
+              content: Text('Galeri açılırken hata: $e'),
+              backgroundColor: _P.error),
         );
       }
       return;
     }
 
-    if (image == null) {
-      debugPrint('Image picker cancelled');
-      return;
-    }
-    debugPrint('Image picked: ${image.path}');
-    if (!mounted) return;
+    if (image == null || !mounted) return;
 
-    // Show bottom sheet for title & description
     final titleController = TextEditingController();
     final descController = TextEditingController();
 
     final confirmed = await showModalBottomSheet<bool>(
       context: context,
-      backgroundColor: AppColors.surface,
+      backgroundColor: _P.surface,
       isScrollControlled: true,
-      shape: RoundedRectangleBorder(
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(DesignTokens.radiusLg)),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       builder: (ctx) {
         return Padding(
           padding: EdgeInsets.only(
-            left: DesignTokens.space5, right: DesignTokens.space5, top: DesignTokens.space5,
-            bottom: MediaQuery.of(ctx).viewInsets.bottom + DesignTokens.space5,
+            left: 24,
+            right: 24,
+            top: 20,
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Handle
               Center(
                 child: Container(
-                  width: 40, height: 4,
+                  width: 36,
+                  height: 4,
                   decoration: BoxDecoration(
-                    color: AppColors.border,
+                    color: _P.border,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
               ),
-              const SizedBox(height: DesignTokens.space5),
+              const SizedBox(height: 20),
               Text(
                 'Anı Detayları',
-                style: DesignTokens.heading4(color: AppColors.textPrimary),
+                style: GoogleFonts.cormorantGaramond(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w600,
+                  color: _P.text,
+                ),
               ),
-              const SizedBox(height: DesignTokens.space4),
-              TextField(
+              const SizedBox(height: 16),
+              _premiumTextField(
                 controller: titleController,
-                style: const TextStyle(color: AppColors.textPrimary),
-                decoration: InputDecoration(
-                  hintText: 'Başlık (opsiyonel)',
-                  hintStyle: TextStyle(color: AppColors.textSecondary.withOpacity(0.5)),
-                  filled: true,
-                  fillColor: AppColors.background,
-                  border: OutlineInputBorder(
-                    borderRadius: DesignTokens.borderRadiusMd,
-                    borderSide: BorderSide.none,
-                  ),
-                ),
+                hint: 'Başlık (opsiyonel)',
               ),
-              const SizedBox(height: DesignTokens.space3),
-              TextField(
+              const SizedBox(height: 10),
+              _premiumTextField(
                 controller: descController,
+                hint: 'Bu anı hakkında bir şeyler yaz...',
                 maxLines: 3,
-                style: const TextStyle(color: AppColors.textPrimary),
-                decoration: InputDecoration(
-                  hintText: 'Bu anı hakkında bir şeyler yaz...',
-                  hintStyle: TextStyle(color: AppColors.textSecondary.withOpacity(0.5)),
-                  filled: true,
-                  fillColor: AppColors.background,
-                  border: OutlineInputBorder(
-                    borderRadius: DesignTokens.borderRadiusMd,
-                    borderSide: BorderSide.none,
-                  ),
-                ),
               ),
-              const SizedBox(height: DesignTokens.space5),
+              const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pop(ctx, true),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    padding: DesignTokens.paddingVertical4,
-                    shape: RoundedRectangleBorder(borderRadius: DesignTokens.borderRadiusMd),
-                    elevation: 0,
+                child: GestureDetector(
+                  onTap: () => Navigator.pop(ctx, true),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 15),
+                    decoration: BoxDecoration(
+                      color: _P.gold,
+                      borderRadius: BorderRadius.circular(14),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x44C8A96E),
+                          blurRadius: 12,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: const Center(
+                      child: Text(
+                        'Kaydet',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF5D4E37),
+                        ),
+                      ),
+                    ),
                   ),
-                  child: Text('Kaydet 💕', style: DesignTokens.labelLarge(color: Colors.white, weight: FontWeight.bold)),
                 ),
               ),
             ],
@@ -133,40 +145,30 @@ class _MemoryVaultScreenState extends ConsumerState<MemoryVaultScreen> {
       },
     );
 
-    debugPrint('Bottom sheet result: $confirmed');
     if (confirmed != true || !mounted) return;
 
-    // Show loading
     setState(() => _isUploading = true);
-
     try {
-      // Save the memory
       await ref.read(memoryControllerProvider.notifier).addMemory(
-        imagePath: image.path,
-        date: DateTime.now(),
-        description: descController.text.isEmpty ? ' ' : descController.text,
-        title: titleController.text.isEmpty ? null : titleController.text,
-      );
-      debugPrint('Memory saved successfully');
-
+            imagePath: image.path,
+            date: DateTime.now(),
+            description:
+                descController.text.isEmpty ? ' ' : descController.text,
+            title: titleController.text.isEmpty ? null : titleController.text,
+          );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Anı başarıyla kaydedildi! ✨'),
-            backgroundColor: AppColors.primary,
+          SnackBar(
+            content: const Text('Anı kaydedildi ✨'),
+            backgroundColor: _P.gold,
             behavior: SnackBarBehavior.floating,
           ),
         );
       }
     } catch (e) {
-      debugPrint('Error saving memory: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Hata: $e'),
-            backgroundColor: AppColors.error,
-            behavior: SnackBarBehavior.floating,
-          ),
+          SnackBar(content: Text('Hata: $e'), backgroundColor: _P.error),
         );
       }
     } finally {
@@ -174,23 +176,60 @@ class _MemoryVaultScreenState extends ConsumerState<MemoryVaultScreen> {
     }
   }
 
-  // Helper to group memories
+  Widget _premiumTextField({
+    required TextEditingController controller,
+    required String hint,
+    int maxLines = 1,
+  }) {
+    return TextField(
+      controller: controller,
+      maxLines: maxLines,
+      style: const TextStyle(color: _P.text, fontSize: 14),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: const TextStyle(color: _P.muted, fontSize: 14),
+        filled: true,
+        fillColor: const Color(0xFFFFF5EE),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: _P.border),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: _P.border),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: _P.gold.withOpacity(0.5)),
+        ),
+        contentPadding: const EdgeInsets.all(14),
+      ),
+    );
+  }
+
   Map<String, List<Memory>> _groupMemories(List<Memory> memories) {
     final groups = <String, List<Memory>>{};
     for (final memory in memories) {
       final key = '${_monthName(memory.date.month)} ${memory.date.year}';
-      if (!groups.containsKey(key)) {
-        groups[key] = [];
-      }
-      groups[key]!.add(memory);
+      groups.putIfAbsent(key, () => []).add(memory);
     }
     return groups;
   }
 
   String _monthName(int month) {
     const months = [
-      'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
-      'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'
+      'Ocak',
+      'Şubat',
+      'Mart',
+      'Nisan',
+      'Mayıs',
+      'Haziran',
+      'Temmuz',
+      'Ağustos',
+      'Eylül',
+      'Ekim',
+      'Kasım',
+      'Aralık',
     ];
     return months[month - 1];
   }
@@ -200,69 +239,98 @@ class _MemoryVaultScreenState extends ConsumerState<MemoryVaultScreen> {
     final memoriesAsync = ref.watch(memoriesProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: _P.bg,
       body: memoriesAsync.when(
         data: (memories) {
-          if (memories.isEmpty) {
-            return EmptyMemoriesState(
-              onAddMemory: _pickAndAddMemory,
-            );
-          }
+          if (memories.isEmpty) return _buildEmptyState();
 
           final grouped = _groupMemories(memories);
 
           return CustomScrollView(
             slivers: [
+              // App Bar
               SliverAppBar(
-                backgroundColor: AppColors.background,
+                backgroundColor: _P.bg,
                 elevation: 0,
                 pinned: true,
-                expandedHeight: 120,
+                expandedHeight: 110,
                 leading: IconButton(
-                  icon: const Icon(Icons.arrow_back_ios_new, color: AppColors.textPrimary),
-                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.arrow_back_ios_new,
+                      color: _P.text, size: 18),
+                  onPressed: () {
+                    if (widget.onBack != null) {
+                      widget.onBack!();
+                    } else {
+                      Navigator.pop(context);
+                    }
+                  },
                 ),
                 flexibleSpace: FlexibleSpaceBar(
                   centerTitle: false,
                   titlePadding: const EdgeInsets.only(left: 24, bottom: 16),
                   title: Text(
                     'Anı Kutusu',
-                    style: DesignTokens.heading3(color: AppColors.textPrimary),
+                    style: GoogleFonts.cormorantGaramond(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w600,
+                      color: _P.text,
+                    ),
                   ),
                 ),
               ),
 
-              for (var group in grouped.entries) ...[
+              // Uploading indicator
+              if (_isUploading)
+                const SliverToBoxAdapter(
+                  child: LinearProgressIndicator(
+                    backgroundColor: Colors.transparent,
+                    color: _P.gold,
+                    minHeight: 2,
+                  ),
+                ),
+
+              // Memory groups
+              for (final group in grouped.entries) ...[
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
+                    padding: const EdgeInsets.fromLTRB(24, 28, 24, 12),
                     child: Row(
                       children: [
+                        // Gold accent bar
                         Container(
-                          width: 4, height: 24,
+                          width: 3,
+                          height: 20,
                           decoration: BoxDecoration(
-                            color: AppColors.primary,
-                            borderRadius: DesignTokens.borderRadiusXs,
+                            color: _P.gold,
+                            borderRadius: BorderRadius.circular(2),
                           ),
                         ),
-                        const SizedBox(width: DesignTokens.space3),
+                        const SizedBox(width: 10),
                         Text(
                           group.key,
-                          style: DesignTokens.heading4(color: AppColors.textPrimary),
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: _P.text,
+                            letterSpacing: 0.3,
+                          ),
                         ),
                         const Spacer(),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: DesignTokens.space3, vertical: DesignTokens.space1),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 3),
                           decoration: BoxDecoration(
-                            color: AppColors.surface,
-                            borderRadius: DesignTokens.borderRadiusSm,
-                            border: Border.all(color: AppColors.border),
+                            color: _P.gold.withOpacity(0.08),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: _P.gold.withOpacity(0.2)),
                           ),
                           child: Text(
                             '${group.value.length} Anı',
-                            style: DesignTokens.labelSmall(
-                              color: AppColors.textSecondary,
-                              weight: FontWeight.w500,
+                            style: const TextStyle(
+                              fontSize: 10,
+                              color: _P.gold,
+                              fontWeight: FontWeight.w500,
+                              letterSpacing: 0.5,
                             ),
                           ),
                         ),
@@ -274,16 +342,13 @@ class _MemoryVaultScreenState extends ConsumerState<MemoryVaultScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   sliver: SliverMasonryGrid.count(
                     crossAxisCount: 2,
-                    mainAxisSpacing: DesignTokens.space3,
-                    crossAxisSpacing: DesignTokens.space3,
+                    mainAxisSpacing: 10,
+                    crossAxisSpacing: 10,
                     childCount: group.value.length,
                     itemBuilder: (context, index) {
                       final memory = group.value[index];
-                      // Random aspect ratio based on ID hash for consistent look
                       final random = Random(memory.id.hashCode);
-                      // Use mostly 0.75 (portrait) but some 1.0 (square)
-                      final aspectRatio = random.nextBool() ? 0.75 : 0.85; 
-
+                      final aspectRatio = random.nextBool() ? 0.75 : 0.9;
                       return _MemoryCard(
                         memory: memory,
                         aspectRatio: aspectRatio,
@@ -294,92 +359,168 @@ class _MemoryVaultScreenState extends ConsumerState<MemoryVaultScreen> {
                   ),
                 ),
               ],
-              
-              const SliverToBoxAdapter(child: SizedBox(height: 100)), // Bottom padding
+
+              const SliverToBoxAdapter(child: SizedBox(height: 120)),
             ],
           );
         },
         loading: () => const Center(
-          child: CircularProgressIndicator(color: AppColors.primary),
+          child: CircularProgressIndicator(color: _P.gold),
         ),
         error: (e, _) => Center(
-          child: Text('Hata: $e', style: const TextStyle(color: AppColors.error)),
+          child: Text('Hata: $e', style: const TextStyle(color: _P.error)),
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _pickAndAddMemory,
-        backgroundColor: AppColors.primary,
-        icon: const Icon(Icons.add_a_photo, color: Colors.white),
-        label: const Text('Yeni Anı', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        elevation: 4,
-      ),
-    );
-  }
 
-  Widget _buildEmptyState(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: AppColors.textPrimary),
-          onPressed: () => Navigator.pop(context),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
-      backgroundColor: AppColors.background,
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+      // FAB — premium gold style
+      floatingActionButton: GestureDetector(
+        onTap: _pickAndAddMemory,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          decoration: BoxDecoration(
+            color: _P.gold,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x55C8A96E),
+                blurRadius: 16,
+                offset: Offset(0, 6),
+              ),
+            ],
+          ),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                padding: const EdgeInsets.all(32),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.05),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.collections_bookmark_outlined,
-                  size: 80,
-                  color: AppColors.primary.withOpacity(0.6),
-                ),
-              ),
-              const SizedBox(height: 32),
-              const Text(
-                'Anı Kutusu Boş',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 12),
+              Icon(Icons.add_a_photo_outlined,
+                  color: Color(0xFF5D4E37), size: 18),
+              SizedBox(width: 8),
               Text(
-                'Henüz hiç anı biriktirmediniz.\nİlk fotoğrafınızı ekleyerek başlayın!',
+                'Yeni Anı',
                 style: TextStyle(
-                  fontSize: 15,
-                  color: AppColors.textSecondary,
-                  height: 1.5,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF5D4E37),
                 ),
-                textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 40),
             ],
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _pickAndAddMemory,
-        backgroundColor: AppColors.primary,
-        icon: const Icon(Icons.add_a_photo, color: Colors.white),
-        label: const Text('İlk Anıyı Ekle', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return SafeArea(
+      child: Column(
+        children: [
+          // Mini header
+          Padding(
+            padding: const EdgeInsets.fromLTRB(8, 8, 24, 0),
+            child: Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.arrow_back_ios_new,
+                      color: _P.text, size: 18),
+                  onPressed: () {
+                    if (widget.onBack != null) {
+                      widget.onBack!();
+                    } else {
+                      Navigator.pop(context);
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Icon container
+                  Container(
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: _P.gold.withOpacity(0.06),
+                      border: Border.all(color: _P.gold.withOpacity(0.15)),
+                    ),
+                    child: const Center(
+                      child: Icon(
+                        Icons.auto_stories_outlined,
+                        size: 42,
+                        color: _P.gold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 28),
+                  Text(
+                    'Henüz Anı Yok',
+                    style: GoogleFonts.cormorantGaramond(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w600,
+                      color: _P.text,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  const Text(
+                    'İlk fotoğrafınızı ekleyerek\nanılarınızı biriktirmeye başlayın.',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: _P.muted,
+                      height: 1.6,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 40),
+                  GestureDetector(
+                    onTap: _pickAndAddMemory,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 28, vertical: 14),
+                      decoration: BoxDecoration(
+                        color: _P.gold,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x44C8A96E),
+                            blurRadius: 14,
+                            offset: Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.add_a_photo_outlined,
+                              color: Color(0xFF5D4E37), size: 18),
+                          SizedBox(width: 8),
+                          Text(
+                            'İlk Anıyı Ekle',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF5D4E37),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 
   void _showMemoryDetail(BuildContext context, dynamic memory) {
+    final hasImage = (memory.imageUrl is String) &&
+        (memory.imageUrl as String).trim().isNotEmpty;
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -392,20 +533,19 @@ class _MemoryVaultScreenState extends ConsumerState<MemoryVaultScreen> {
           builder: (context, scrollController) {
             return Container(
               decoration: const BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+                color: _P.surface,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
               ),
               child: Column(
                 children: [
-                  Center(
-                    child: Container(
-                      margin: const EdgeInsets.only(top: 12, bottom: 12),
-                      width: 40,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: AppColors.border,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
+                  // Handle
+                  Container(
+                    margin: const EdgeInsets.only(top: 12, bottom: 12),
+                    width: 36,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: _P.border,
+                      borderRadius: BorderRadius.circular(2),
                     ),
                   ),
                   Expanded(
@@ -414,60 +554,87 @@ class _MemoryVaultScreenState extends ConsumerState<MemoryVaultScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // Header visual
                           GestureDetector(
                             onTap: () => Navigator.pop(context),
                             child: Hero(
                               tag: 'memory_img_${memory.id}',
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(24),
-                                child: Container(
-                                  margin: const EdgeInsets.symmetric(horizontal: 16),
-                                  child: CachedNetworkImage(
-                                    imageUrl: memory.imageUrl,
-                                    width: double.infinity,
-                                    height: 450,
-                                    fit: BoxFit.cover,
-                                    placeholder: (context, url) => Container(
-                                      height: 450,
-                                      color: AppColors.background,
-                                      child: const Center(child: CircularProgressIndicator()),
-                                    ),
-                                  ),
+                              child: Container(
+                                margin:
+                                    const EdgeInsets.symmetric(horizontal: 16),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(20),
+                                  child: hasImage
+                                      ? CachedNetworkImage(
+                                          imageUrl: memory.imageUrl,
+                                          width: double.infinity,
+                                          height: 420,
+                                          fit: BoxFit.cover,
+                                          placeholder: (context, url) =>
+                                              Container(
+                                            height: 420,
+                                            color: _P.surface,
+                                            child: const Center(
+                                              child: CircularProgressIndicator(
+                                                  color: _P.gold),
+                                            ),
+                                          ),
+                                        )
+                                      : _TextOnlyPoster(
+                                          title: memory.title as String?,
+                                          description:
+                                              memory.description as String? ??
+                                                  '',
+                                          height: 420,
+                                        ),
                                 ),
                               ),
                             ),
                           ),
+
                           Padding(
                             padding: const EdgeInsets.all(24),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+                                // Date & delete row
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 12, vertical: 6),
                                       decoration: BoxDecoration(
-                                        color: AppColors.primary.withOpacity(0.1),
+                                        color: _P.gold.withOpacity(0.08),
                                         borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(
+                                            color: _P.gold.withOpacity(0.2)),
                                       ),
                                       child: Row(
                                         children: [
-                                          const Icon(Icons.calendar_today, size: 14, color: AppColors.primary),
-                                          const SizedBox(width: 8),
+                                          const Icon(
+                                            Icons.calendar_today,
+                                            size: 12,
+                                            color: _P.gold,
+                                          ),
+                                          const SizedBox(width: 6),
                                           Text(
                                             '${memory.date.day} ${_monthName(memory.date.month)} ${memory.date.year}',
                                             style: const TextStyle(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w600,
-                                              color: AppColors.primary,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w500,
+                                              color: _P.gold,
                                             ),
                                           ),
                                         ],
                                       ),
                                     ),
                                     IconButton(
-                                      icon: const Icon(Icons.delete_outline_rounded, color: AppColors.error, size: 28),
+                                      icon: const Icon(
+                                          Icons.delete_outline_rounded,
+                                          color: _P.error,
+                                          size: 24),
                                       onPressed: () {
                                         Navigator.pop(context);
                                         _deleteMemory(context, memory.id);
@@ -475,25 +642,30 @@ class _MemoryVaultScreenState extends ConsumerState<MemoryVaultScreen> {
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 24),
-                                if (memory.title != null && memory.title!.isNotEmpty) ...[
+                                const SizedBox(height: 16),
+
+                                // Title
+                                if (memory.title != null &&
+                                    memory.title!.isNotEmpty) ...[
                                   Text(
                                     memory.title!,
-                                    style: const TextStyle(
+                                    style: GoogleFonts.cormorantGaramond(
                                       fontSize: 26,
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.textPrimary,
+                                      fontWeight: FontWeight.w600,
+                                      color: _P.text,
                                       height: 1.2,
                                     ),
                                   ),
                                   const SizedBox(height: 12),
                                 ],
+
+                                // Description
                                 Text(
                                   memory.description,
                                   style: const TextStyle(
-                                    fontSize: 16,
-                                    color: AppColors.textPrimary,
-                                    height: 1.6,
+                                    fontSize: 15,
+                                    color: _P.muted,
+                                    height: 1.7,
                                   ),
                                 ),
                                 const SizedBox(height: 32),
@@ -517,29 +689,36 @@ class _MemoryVaultScreenState extends ConsumerState<MemoryVaultScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: const Text(
+        backgroundColor: _P.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
           'Anıyı Sil',
-          style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+          style: GoogleFonts.cormorantGaramond(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: _P.text,
+          ),
         ),
         content: const Text(
-          'Bu anıyı silmek istediğinize emin misiniz? Geri dönüşü yoktur.',
-          style: TextStyle(color: AppColors.textSecondary),
+          'Bu anıyı silmek istediğinize emin misiniz?',
+          style: TextStyle(color: _P.muted, fontSize: 14),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Vazgeç', style: TextStyle(color: AppColors.textSecondary)),
+            child: const Text('Vazgeç', style: TextStyle(color: _P.muted)),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
+              backgroundColor: _P.error,
               elevation: 0,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
             ),
-            child: const Text('SİL', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            child: const Text('Sil',
+                style: TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -551,6 +730,7 @@ class _MemoryVaultScreenState extends ConsumerState<MemoryVaultScreen> {
   }
 }
 
+// ─── Memory Card ─────────────────────────────────────────────────────────────
 class _MemoryCard extends StatelessWidget {
   final dynamic memory;
   final double aspectRatio;
@@ -566,109 +746,168 @@ class _MemoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasImage = (memory.imageUrl is String) &&
+        (memory.imageUrl as String).trim().isNotEmpty;
+
     return GestureDetector(
       onTap: onTap,
       onLongPress: onLongPress,
       child: Hero(
         tag: 'memory_img_${memory.id}',
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: AspectRatio(
-              aspectRatio: aspectRatio,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: AspectRatio(
+            aspectRatio: aspectRatio,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                if (hasImage)
                   CachedNetworkImage(
                     imageUrl: memory.imageUrl,
                     fit: BoxFit.cover,
-                    placeholder: (context, url) => Container(
-                      color: AppColors.surface,
-                    ),
+                    placeholder: (context, url) =>
+                        Container(color: const Color(0xFFFFF5EE)),
                     errorWidget: (context, url, error) => Container(
-                      color: AppColors.surface,
-                      child: const Icon(Icons.broken_image, color: Colors.grey),
+                      color: const Color(0xFFFFF5EE),
+                      child: const Icon(Icons.broken_image, color: _P.muted),
                     ),
-                  ),
-                  
-                  // Gradient Overlay
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.transparent,
-                          Colors.black.withOpacity(0.0),
-                          Colors.black.withOpacity(0.4),
-                          Colors.black.withOpacity(0.7),
-                        ],
-                        stops: const [0.0, 0.5, 0.75, 1.0],
-                      ),
-                    ),
+                  )
+                else
+                  _TextOnlyPoster(
+                    title: memory.title as String?,
+                    description: memory.description as String? ?? '',
                   ),
 
-                  // Content
-                  Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (memory.title != null && memory.title!.isNotEmpty)
-                          Text(
-                            memory.title!,
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                              shadows: [Shadow(color: Colors.black26, offset: Offset(0, 1), blurRadius: 2)],
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            const Icon(Icons.calendar_today, size: 10, color: Colors.white70),
-                            const SizedBox(width: 4),
-                            Text(
-                              '${memory.date.day}',
-                              style: const TextStyle(
-                                fontSize: 11,
-                                color: Colors.white70,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
+                // Bottom gradient
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        Colors.black.withOpacity(0.6),
                       ],
+                      stops: const [0.5, 1.0],
                     ),
                   ),
-                  
-                  // Inkwell for ripple
-                  Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: onTap,
-                      onLongPress: onLongPress,
-                      splashColor: Colors.white.withOpacity(0.2),
-                    ),
+                ),
+
+                // Content overlay
+                Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (memory.title != null && memory.title!.isNotEmpty)
+                        Text(
+                          memory.title!,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      const SizedBox(height: 2),
+                      // Gold date badge
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: _P.gold.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: _P.gold.withOpacity(0.3)),
+                        ),
+                        child: Text(
+                          '${memory.date.day}',
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: _P.gold2,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TextOnlyPoster extends StatelessWidget {
+  final String? title;
+  final String description;
+  final double? height;
+
+  const _TextOnlyPoster({
+    this.title,
+    required this.description,
+    this.height,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: height,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            _P.gold.withOpacity(0.14),
+            const Color(0xFFFFF5EE),
+          ],
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: _P.gold.withOpacity(0.15),
+                shape: BoxShape.circle,
+              ),
+              child:
+                  const Icon(Icons.menu_book_rounded, size: 18, color: _P.gold),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              (title != null && title!.trim().isNotEmpty)
+                  ? title!.trim()
+                  : 'Hikaye',
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: _P.text,
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                height: 1.3,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              description.trim().isEmpty ? 'Metin anisi' : description.trim(),
+              maxLines: 6,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: _P.muted,
+                fontSize: 12,
+                height: 1.45,
+              ),
+            ),
+          ],
         ),
       ),
     );

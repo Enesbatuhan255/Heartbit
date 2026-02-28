@@ -80,7 +80,7 @@ class _MoodPillState extends State<MoodPill> with SingleTickerProviderStateMixin
                 gradient: LinearGradient(
                   colors: [
                     AppColors.surface,
-                    const Color(0xFF1F1F23),
+                    const Color(0xFFFFF5EE),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,

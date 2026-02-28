@@ -1,4 +1,5 @@
 import 'dart:developer' as developer;
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:heartbit/features/games/stack_tower/domain/entities/stacked_block.dart';
 
@@ -45,12 +46,36 @@ abstract class StackTowerRemoteDataSource {
 
 class StackTowerRemoteDataSourceImpl implements StackTowerRemoteDataSource {
   final FirebaseFirestore _firestore;
+  static const Duration _waitingSessionTtl = Duration(minutes: 5);
 
-  StackTowerRemoteDataSourceImpl({required FirebaseFirestore firestore}) 
+  StackTowerRemoteDataSourceImpl({required FirebaseFirestore firestore})
       : _firestore = firestore;
 
   CollectionReference<Map<String, dynamic>> _sessionsRef() {
     return _firestore.collection('stack_tower_sessions');
+  }
+
+  DateTime _readCreatedAt(Map<String, dynamic> data) {
+    return (data['createdAt'] as Timestamp?)?.toDate() ??
+        DateTime.now();
+  }
+
+  bool _isTerminalStatus(String status) {
+    return status == 'gameover' || status == 'cancelled';
+  }
+
+  bool _isStaleWaiting(Map<String, dynamic> data) {
+    final status = data['status'] as String? ?? '';
+    if (status != 'waiting') return false;
+    return DateTime.now().difference(_readCreatedAt(data)) > _waitingSessionTtl;
+  }
+
+  Future<void> _sendNotificationSafe(Map<String, dynamic> payload) async {
+    try {
+      await _firestore.collection('notifications').add(payload);
+    } catch (e, st) {
+      developer.log('[StackTower] Notification write failed: $e', stackTrace: st);
+    }
   }
 
   @override
@@ -59,73 +84,74 @@ class StackTowerRemoteDataSourceImpl implements StackTowerRemoteDataSource {
     required String startingUserId,
     required String partnerId,
   }) async {
-    developer.log('[StackTower] createSession called - coupleId: $coupleId, userId: $startingUserId, partnerId: $partnerId');
-    
-    // Check for existing active session
+    developer.log(
+      '[StackTower] createSession called - coupleId: $coupleId, userId: $startingUserId, partnerId: $partnerId',
+    );
+
     final existing = await _sessionsRef()
         .where('coupleId', isEqualTo: coupleId)
         .where('active', isEqualTo: true)
-        .limit(1)
         .get();
 
     developer.log('[StackTower] Existing active sessions found: ${existing.docs.length}');
 
     if (existing.docs.isNotEmpty) {
-      final doc = existing.docs.first;
-      final data = doc.data();
-      developer.log('[StackTower] Found session ${doc.id} - status: ${data['status']}, readyUsers: ${data['readyUsers']}');
-      
-      // If session exists, add this user as ready and return
-      if (data['status'] == 'waiting') {
-        final currentReady = List<String>.from(data['readyUsers'] ?? []);
-        if (!currentReady.contains(startingUserId)) {
-          developer.log('[StackTower] Adding $startingUserId to readyUsers');
-          await doc.reference.update({
-            'readyUsers': FieldValue.arrayUnion([startingUserId]),
-          });
-          
-          // Notify the waiting partner that you joined
-          // Get the first user who created the session
-          final waitingUserId = currentReady.isNotEmpty ? currentReady.first : partnerId;
-          if (waitingUserId != startingUserId) {
-            await _firestore.collection('notifications').add({
-              'targetUserId': waitingUserId,
-              'fromUserId': startingUserId,
-              'type': 'stack_tower_partner_joined',
-              'title': 'Stack Tower 🎮',
-              'body': 'Partnerin oyuna katıldı! Oyun başlıyor...',
-              'coupleId': coupleId,
-              'sessionId': doc.id,
-              'createdAt': FieldValue.serverTimestamp(),
-              'sent': false,
-            });
-          }
+      final docs = [...existing.docs]
+        ..sort((a, b) => _readCreatedAt(b.data()).compareTo(_readCreatedAt(a.data())));
+
+      for (final doc in docs) {
+        final data = doc.data();
+        final status = data['status'] as String? ?? '';
+        developer.log(
+          '[StackTower] Candidate session ${doc.id} - status: $status, readyUsers: ${data['readyUsers']}',
+        );
+
+        if (_isTerminalStatus(status) || _isStaleWaiting(data)) {
+          developer.log('[StackTower] Deactivating stale/terminal session ${doc.id}');
+          await doc.reference.update({'active': false});
+          continue;
         }
-        // Re-fetch the document to get fresh data after arrayUnion update
-        final freshDoc = await doc.reference.get();
-        final freshSession = _sessionFromSnapshot(freshDoc);
-        developer.log('[StackTower] Returning fresh session - readyUsers: ${freshSession.readyUsers}');
-        return freshSession;
+
+        if (status == 'playing') {
+          developer.log('[StackTower] Returning active playing session ${doc.id}');
+          final freshDoc = await doc.reference.get();
+          return _sessionFromSnapshot(freshDoc);
+        }
+
+        if (status == 'waiting') {
+          final currentReady = List<String>.from(data['readyUsers'] ?? []);
+          if (!currentReady.contains(startingUserId)) {
+            await doc.reference.update({
+              'readyUsers': FieldValue.arrayUnion([startingUserId]),
+            });
+
+            final waitingUserId =
+                currentReady.isNotEmpty ? currentReady.first : partnerId;
+            if (waitingUserId != startingUserId) {
+              await _sendNotificationSafe({
+                'targetUserId': waitingUserId,
+                'fromUserId': startingUserId,
+                'type': 'stack_tower_partner_joined',
+                'title': 'Stack Tower',
+                'body': 'Your partner joined the game. Starting now!',
+                'coupleId': coupleId,
+                'sessionId': doc.id,
+                'createdAt': FieldValue.serverTimestamp(),
+                'sent': false,
+              });
+            }
+          }
+
+          final freshDoc = await doc.reference.get();
+          return _sessionFromSnapshot(freshDoc);
+        }
       }
-      
-      // If still playing, return existing
-      if (data['status'] == 'playing') {
-        developer.log('[StackTower] Session is playing, returning existing');
-        final freshDoc = await doc.reference.get();
-        return _sessionFromSnapshot(freshDoc);
-      }
-      
-      // If status is 'gameover' or 'cancelled', we should deactivate it and create a new one
-      // This fixes the bug where "Play Again" resumes the old game
-      developer.log('[StackTower] Found active session with status: ${data['status']} - Deactivating and creating NEW one');
-      await doc.reference.update({'active': false});
     }
 
     developer.log('[StackTower] Creating NEW session for couple: $coupleId');
     final docRef = _sessionsRef().doc();
     final now = DateTime.now();
 
-    // Create base block (centered, standard width)
     final baseBlock = StackedBlock(
       leftRatio: 0.3,
       widthRatio: 0.4,
@@ -139,12 +165,12 @@ class StackTowerRemoteDataSourceImpl implements StackTowerRemoteDataSource {
       coupleId: coupleId,
       currentTurnUserId: startingUserId,
       blocks: [baseBlock],
-      status: 'waiting', // Start in waiting state
+      status: 'waiting',
       speed: 1.0,
       score: 0,
       createdAt: now,
       active: true,
-      readyUsers: [startingUserId], // First user is ready
+      readyUsers: [startingUserId],
     );
 
     await docRef.set({
@@ -160,13 +186,12 @@ class StackTowerRemoteDataSourceImpl implements StackTowerRemoteDataSource {
       'readyUsers': session.readyUsers,
     });
 
-    // Send notification to partner
-    await _firestore.collection('notifications').add({
+    await _sendNotificationSafe({
       'targetUserId': partnerId,
       'fromUserId': startingUserId,
       'type': 'stack_tower_invite',
-      'title': 'Stack Tower 🎮',
-      'body': 'Partnerin seni Stack Tower oynamaya çağırıyor!',
+      'title': 'Stack Tower',
+      'body': 'Your partner invited you to play Stack Tower!',
       'coupleId': coupleId,
       'sessionId': session.id,
       'createdAt': FieldValue.serverTimestamp(),
@@ -221,17 +246,31 @@ class StackTowerRemoteDataSourceImpl implements StackTowerRemoteDataSource {
     return _sessionsRef()
         .where('coupleId', isEqualTo: coupleId)
         .where('active', isEqualTo: true)
-        .limit(1)
         .snapshots()
         .map((snapshot) {
       if (snapshot.docs.isEmpty) return null;
-      return _sessionFromDoc(snapshot.docs.first);
+
+      final sessions = snapshot.docs.map(_sessionFromDoc).where((session) {
+        return !_isTerminalStatus(session.status);
+      }).toList();
+
+      if (sessions.isEmpty) return null;
+
+      sessions.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+      for (final session in sessions) {
+        if (session.status == 'playing') return session;
+      }
+      for (final session in sessions) {
+        if (session.status == 'waiting') return session;
+      }
+
+      return sessions.first;
     });
   }
 
   @override
   Future<void> cancelSession(String sessionId) async {
-    // Cancel = deactivate and reset
     await _sessionsRef().doc(sessionId).update({
       'active': false,
       'status': 'cancelled',
@@ -243,7 +282,6 @@ class StackTowerRemoteDataSourceImpl implements StackTowerRemoteDataSource {
     required String sessionId,
     required String userId,
   }) async {
-    // Create base block
     final baseBlock = StackedBlock(
       leftRatio: 0.3,
       widthRatio: 0.4,
@@ -258,8 +296,8 @@ class StackTowerRemoteDataSourceImpl implements StackTowerRemoteDataSource {
       'score': 0,
       'speed': 1.0,
       'active': true,
-      'readyUsers': [userId], // Only the restarter is ready
-      'currentTurnUserId': userId, // Reset turn to restarter (or randomize?)
+      'readyUsers': [userId],
+      'currentTurnUserId': userId,
     });
   }
 
@@ -283,7 +321,7 @@ class StackTowerRemoteDataSourceImpl implements StackTowerRemoteDataSource {
           .toList(),
       status: data['status'] as String,
       speed: (data['speed'] as num).toDouble(),
-      score: data['score'] as int,
+      score: (data['score'] as num?)?.toInt() ?? 0,
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       active: data['active'] as bool? ?? true,
       readyUsers: List<String>.from(data['readyUsers'] ?? []),

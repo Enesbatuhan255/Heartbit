@@ -46,7 +46,7 @@ final sharedDraftSessionProvider =
 // ignore: unused_element
 typedef SharedDraftSessionRef = AutoDisposeStreamProviderRef<DraftSession?>;
 String _$draftSessionControllerHash() =>
-    r'3cad87326a469b54bbf069fa9ab58a26950bb61f';
+    r'4a2e15bea67f8c4264aa11cad77692ac52d9d958';
 
 /// See also [DraftSessionController].
 @ProviderFor(DraftSessionController)

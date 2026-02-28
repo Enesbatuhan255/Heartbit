@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:heartbit/config/theme/app_colors.dart';
 import 'package:heartbit/features/drawing/domain/entities/drawing_session.dart';
 
 class DrawingCanvas extends StatelessWidget {
@@ -25,7 +26,7 @@ class _DrawingPainter extends CustomPainter {
     if (points.isEmpty) return;
 
     final paint = Paint()
-      ..color = Colors.white
+      ..color = AppColors.textPrimary
       ..strokeWidth = 4.0
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round // Smooth corners

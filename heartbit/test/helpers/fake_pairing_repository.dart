@@ -26,7 +26,16 @@ class FakePairingRepository implements PairingRepository {
   }
 
   @override
-  Future<CoupleEntity> joinWithCode({required String currentUserId, required String partnerUserId}) async {
+  Future<CoupleEntity> joinWithCode({
+    required String currentUserId,
+    required String partnerUserId,
+    required String code,
+  }) async {
+    final partnerCode = _userCodes[partnerUserId];
+    if (partnerCode != null && partnerCode != code) {
+      throw ArgumentError('Invalid pairing code');
+    }
+
     final coupleId = 'couple_${currentUserId}_$partnerUserId';
     
     _couples[currentUserId] = coupleId;

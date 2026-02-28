@@ -28,7 +28,8 @@ class StackTowerInvite {
       sessionId: map['sessionId'] as String,
       coupleId: map['coupleId'] as String,
       fromUserId: map['fromUserId'] as String? ?? '',
-      createdAt: (map['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      createdAt: (map['createdAt'] as Timestamp?)?.toDate() ??
+          DateTime.fromMillisecondsSinceEpoch(0),
     );
   }
 }
@@ -41,21 +42,19 @@ Stream<List<StackTowerInvite>> stackTowerInvites(StackTowerInvitesRef ref) {
 
   if (userId == null) return const Stream.empty();
 
-  // Only fetch invites created within the last 2 minutes to prevent
-  // stale invites from showing up on every app launch.
-  final cutoff = DateTime.now().subtract(const Duration(minutes: 2));
-
   return firestore
       .collection('notifications')
       .where('targetUserId', isEqualTo: userId)
       .where('type', isEqualTo: 'stack_tower_invite')
-      .where('sent', isEqualTo: false)
-      .where('createdAt', isGreaterThan: Timestamp.fromDate(cutoff))
       .snapshots()
       .map((snapshot) {
-    final invites = snapshot.docs.map((doc) {
-      return StackTowerInvite.fromMap(doc.id, doc.data());
-    }).toList();
+    final cutoff = DateTime.now().subtract(const Duration(minutes: 2));
+
+    final invites = snapshot.docs
+        .where((doc) => doc.data()['dismissedAt'] == null)
+        .map((doc) => StackTowerInvite.fromMap(doc.id, doc.data()))
+        .where((invite) => invite.createdAt.isAfter(cutoff))
+        .toList();
     
     // Sort by newest first
     invites.sort((a, b) => b.createdAt.compareTo(a.createdAt));

@@ -47,8 +47,10 @@ dependencies:
   flutter_card_swiper: ^7.2.0
   location: ^6.0.2
   flutter_staggered_grid_view: ^0.7.0
-  google_fonts: ^6.2.1
+  google_fonts: ^6.3.0
   shimmer: ^3.0.0
+  audioplayers: ^6.1.0
+
 
 dev_dependencies:
   flutter_test:
@@ -66,3 +68,14 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/
+  fonts:
+    - family: Cormorant
+      fonts:
+        - asset: assets/fonts/Cormorant_Garamond/CormorantGaramond-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Cormorant_Garamond/CormorantGaramond-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Cormorant_Garamond/CormorantGaramond-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Cormorant_Garamond/CormorantGaramond-Bold.ttf
+          weight: 700

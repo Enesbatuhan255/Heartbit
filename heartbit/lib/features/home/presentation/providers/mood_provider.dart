@@ -116,16 +116,8 @@ class MoodController extends _$MoodController {
         'read': false,
       });
 
-      // Also update partner's recentMood field for quick access
-      await firestore.collection('users').doc(partnerId).update({
-        'partnerMood': {
-          'mood': mood.name,
-          'emoji': mood.emoji,
-          'label': mood.label,
-          'updatedAt': FieldValue.serverTimestamp(),
-          'partnerName': userName,
-        },
-      });
+      // Do not write partner's /users doc directly; Firestore rules only allow
+      // self-updates (except limited pairing fields).
     } catch (e) {
       // Silently fail - notification is not critical
       print('Failed to send mood notification: $e');

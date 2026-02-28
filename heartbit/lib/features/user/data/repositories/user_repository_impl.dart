@@ -58,4 +58,9 @@ class UserRepositoryImpl implements UserRepository {
   Future<void> updateLocation(String uid, double latitude, double longitude) {
     return _remoteDataSource.updateLocation(uid, latitude, longitude);
   }
+
+  @override
+  Future<void> updateSleepStatus(String uid, bool isSleeping) {
+    return _remoteDataSource.updateSleepStatus(uid, isSleeping);
+  }
 }

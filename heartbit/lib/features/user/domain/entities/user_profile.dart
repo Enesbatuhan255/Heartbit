@@ -14,6 +14,7 @@ class UserProfile with _$UserProfile {
     DateTime? lastSeen,
     DateTime? lastInteraction,
     @Default(false) bool isOnline,
+    @Default(false) bool isSleeping,
     double? latitude,
     double? longitude,
   }) = _UserProfile;

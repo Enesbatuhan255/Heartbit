@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:heartbit/config/theme/app_colors.dart';
 import 'package:heartbit/config/design_tokens/design_tokens.dart';
 
@@ -10,28 +11,31 @@ class AppTheme {
       scaffoldBackgroundColor: AppColors.background,
       colorScheme: ColorScheme.fromSeed(
         seedColor: AppColors.primary,
+        brightness: Brightness.light,
         primary: AppColors.primary,
         secondary: AppColors.secondary,
         surface: AppColors.surface,
         error: AppColors.error,
       ),
       // Typography
-      textTheme: TextTheme(
-        displayLarge: DesignTokens.heading1(color: AppColors.textPrimary),
-        displayMedium: DesignTokens.heading2(color: AppColors.textPrimary),
-        displaySmall: DesignTokens.heading3(color: AppColors.textPrimary),
-        headlineLarge: DesignTokens.heading2(color: AppColors.textPrimary),
-        headlineMedium: DesignTokens.heading3(color: AppColors.textPrimary),
-        headlineSmall: DesignTokens.heading4(color: AppColors.textPrimary),
-        titleLarge: DesignTokens.heading4(color: AppColors.textPrimary),
-        titleMedium: DesignTokens.heading5(color: AppColors.textPrimary),
-        titleSmall: DesignTokens.labelLarge(color: AppColors.textPrimary),
-        bodyLarge: DesignTokens.bodyLarge(color: AppColors.textPrimary),
-        bodyMedium: DesignTokens.bodyMedium(color: AppColors.textSecondary),
-        bodySmall: DesignTokens.bodySmall(color: AppColors.textSecondary),
-        labelLarge: DesignTokens.labelLarge(color: AppColors.textSecondary),
-        labelMedium: DesignTokens.labelMedium(color: AppColors.textSecondary),
-        labelSmall: DesignTokens.labelSmall(color: AppColors.textSecondary),
+      textTheme: GoogleFonts.outfitTextTheme(
+        TextTheme(
+          displayLarge: DesignTokens.heading1(color: AppColors.textPrimary),
+          displayMedium: DesignTokens.heading2(color: AppColors.textPrimary),
+          displaySmall: DesignTokens.heading3(color: AppColors.textPrimary),
+          headlineLarge: DesignTokens.heading2(color: AppColors.textPrimary),
+          headlineMedium: DesignTokens.heading3(color: AppColors.textPrimary),
+          headlineSmall: DesignTokens.heading4(color: AppColors.textPrimary),
+          titleLarge: DesignTokens.heading4(color: AppColors.textPrimary),
+          titleMedium: DesignTokens.heading5(color: AppColors.textPrimary),
+          titleSmall: DesignTokens.labelLarge(color: AppColors.textPrimary),
+          bodyLarge: DesignTokens.bodyLarge(color: AppColors.textPrimary),
+          bodyMedium: DesignTokens.bodyMedium(color: AppColors.textSecondary),
+          bodySmall: DesignTokens.bodySmall(color: AppColors.textSecondary),
+          labelLarge: DesignTokens.labelLarge(color: AppColors.textSecondary),
+          labelMedium: DesignTokens.labelMedium(color: AppColors.textSecondary),
+          labelSmall: DesignTokens.labelSmall(color: AppColors.textSecondary),
+        ),
       ),
       // Input decoration with consistent border radius
       inputDecorationTheme: InputDecorationTheme(

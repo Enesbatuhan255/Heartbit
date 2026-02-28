@@ -119,7 +119,7 @@ class _MoodBottomSheetState extends State<MoodBottomSheet>
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        const Color(0xFF18181B),
+                        const Color(0xFFFFF5EE),
                         AppColors.background,
                       ],
                       begin: Alignment.topCenter,
@@ -312,7 +312,7 @@ class _MoodCardState extends State<_MoodCard> with SingleTickerProviderStateMixi
                         ]
                       : [
                           AppColors.surface,
-                          const Color(0xFF1F1F23),
+                          const Color(0xFFFFF5EE),
                         ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,

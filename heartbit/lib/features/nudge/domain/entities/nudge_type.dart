@@ -3,20 +3,26 @@ enum NudgeType {
   fire,
   water,
   smile,
+  thinking,
   missYou,
+  love,
 }
 
 extension NudgeTypeExtension on NudgeType {
   String get emoji {
     switch (this) {
       case NudgeType.fire:
-        return '🔥';
+        return '\u{1F525}';
       case NudgeType.water:
-        return '💧';
+        return '\u{1F4A7}';
       case NudgeType.smile:
-        return '😊';
+        return '\u{1F60A}';
+      case NudgeType.thinking:
+        return '\u{1F4AD}';
       case NudgeType.missYou:
-        return '💕';
+        return '\u{1F495}';
+      case NudgeType.love:
+        return '\u{1F496}';
     }
   }
 
@@ -25,24 +31,32 @@ extension NudgeTypeExtension on NudgeType {
       case NudgeType.fire:
         return 'Motive Ol!';
       case NudgeType.water:
-        return 'Su İç!';
+        return 'Su \u0130\u00e7!';
       case NudgeType.smile:
-        return 'Gülümse!';
+        return 'G\u00fcl\u00fcmse!';
+      case NudgeType.thinking:
+        return 'D\u00fc\u015f\u00fcn\u00fcyorum';
       case NudgeType.missYou:
-        return 'Seni Özledim';
+        return 'Seni \u00d6zledim';
+      case NudgeType.love:
+        return 'Seviyorum';
     }
   }
 
   String get receiverMessage {
     switch (this) {
       case NudgeType.fire:
-        return 'Partnerin sana enerji gönderiyor! 🔥';
+        return 'Partnerin sana enerji g\u00f6nderiyor! \u{1F525}';
       case NudgeType.water:
-        return 'Partnerin su içmeni hatırlatıyor 💧';
+        return 'Partnerin su i\u00e7meni hat\u0131rlat\u0131yor \u{1F4A7}';
       case NudgeType.smile:
-        return 'Partnerin gülümsemeni istiyor 😊';
+        return 'Partnerin g\u00fcl\u00fcmsemeni istiyor \u{1F60A}';
+      case NudgeType.thinking:
+        return 'Partnerin seni d\u00fc\u015f\u00fcn\u00fcyor! \u{1F4AD}';
       case NudgeType.missYou:
-        return 'Partnerin seni özlüyor 💕';
+        return 'Partnerin seni \u00f6zl\u00fcyor \u{1F495}';
+      case NudgeType.love:
+        return 'Partnerin seni seviyor! \u{1F496}';
     }
   }
 

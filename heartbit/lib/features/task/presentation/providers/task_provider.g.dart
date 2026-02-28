@@ -74,7 +74,7 @@ final streakProvider = AutoDisposeStreamProvider<int>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef StreakRef = AutoDisposeStreamProviderRef<int>;
-String _$taskControllerHash() => r'35ad9a9e0cf1e657687c8ff92d1439bcda9b5e2f';
+String _$taskControllerHash() => r'0d7a0924a6cf5c0aca7ac28a732c4bcc309d086b';
 
 /// See also [TaskController].
 @ProviderFor(TaskController)

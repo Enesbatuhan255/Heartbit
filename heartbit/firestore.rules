@@ -23,8 +23,11 @@ service cloud.firestore {
 
     function isCoupleMember(coupleId) {
       return isSignedIn() &&
-        currentCoupleId() != null &&
-        currentCoupleId() == coupleId;
+        exists(/databases/$(database)/documents/couples/$(coupleId)) &&
+        (
+          get(/databases/$(database)/documents/couples/$(coupleId)).data.user1Id == request.auth.uid ||
+          get(/databases/$(database)/documents/couples/$(coupleId)).data.user2Id == request.auth.uid
+        );
     }
 
     function isPartnerWith(userId) {
@@ -37,8 +40,7 @@ service cloud.firestore {
 
     function canReadPairingCandidate() {
       return isSignedIn() &&
-        currentCoupleId() == null &&
-        resource.data.coupleId == null &&
+        (!('coupleId' in resource.data) || resource.data.coupleId == null) &&
         resource.data.pairingCode is string &&
         resource.data.pairingCodeExpiresAt is timestamp &&
         resource.data.pairingCodeExpiresAt > request.time;
@@ -47,9 +49,8 @@ service cloud.firestore {
     function canLinkPartnerUser(userId) {
       return isSignedIn() &&
         userId != request.auth.uid &&
-        userExists(request.auth.uid) &&
         userExists(userId) &&
-        currentCoupleId() == null &&
+        (!userExists(request.auth.uid) || userDoc(request.auth.uid).data.coupleId == null) &&
         userDoc(userId).data.coupleId == null &&
         userDoc(userId).data.pairingCode is string &&
         userDoc(userId).data.pairingCodeExpiresAt is timestamp &&
@@ -131,6 +132,22 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    match /pairing_codes/{code} {
+      allow create: if isSignedIn() &&
+        request.resource.data.ownerUserId == request.auth.uid &&
+        request.resource.data.expiresAt is timestamp &&
+        request.resource.data.expiresAt > request.time;
+
+      allow read: if isSignedIn() &&
+        resource.data.ownerUserId is string &&
+        resource.data.ownerUserId != request.auth.uid &&
+        resource.data.expiresAt is timestamp &&
+        resource.data.expiresAt > request.time;
+
+      allow update, delete: if isSignedIn() &&
+        resource.data.ownerUserId == request.auth.uid;
+    }
+
     match /drawing_sessions/{sessionId} {
       allow create: if isSignedIn() &&
         request.resource.data.coupleId is string &&
@@ -141,6 +158,42 @@ service cloud.firestore {
     }
 
     match /stack_tower_sessions/{sessionId} {
+      allow create: if isSignedIn() &&
+        request.resource.data.coupleId is string &&
+        isCoupleMember(request.resource.data.coupleId);
+      allow read, update, delete: if isSignedIn() &&
+        resource.data.coupleId is string &&
+        isCoupleMember(resource.data.coupleId);
+    }
+
+    match /rhythm_copy_sessions/{sessionId} {
+      allow create: if isSignedIn() &&
+        request.resource.data.coupleId is string &&
+        isCoupleMember(request.resource.data.coupleId);
+      allow read, update, delete: if isSignedIn() &&
+        resource.data.coupleId is string &&
+        isCoupleMember(resource.data.coupleId);
+    }
+
+    match /emoji_game_sessions/{sessionId} {
+      allow create: if isSignedIn() &&
+        request.resource.data.coupleId is string &&
+        isCoupleMember(request.resource.data.coupleId);
+      allow read, update, delete: if isSignedIn() &&
+        resource.data.coupleId is string &&
+        isCoupleMember(resource.data.coupleId);
+    }
+
+    match /word_chain_sessions/{sessionId} {
+      allow create: if isSignedIn() &&
+        request.resource.data.coupleId is string &&
+        isCoupleMember(request.resource.data.coupleId);
+      allow read, update, delete: if isSignedIn() &&
+        resource.data.coupleId is string &&
+        isCoupleMember(resource.data.coupleId);
+    }
+
+    match /story_chain_sessions/{sessionId} {
       allow create: if isSignedIn() &&
         request.resource.data.coupleId is string &&
         isCoupleMember(request.resource.data.coupleId);

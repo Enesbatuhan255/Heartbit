@@ -87,7 +87,7 @@ final pastQuestionsProvider =
 // ignore: unused_element
 typedef PastQuestionsRef = AutoDisposeFutureProviderRef<List<DailyQuestion>>;
 String _$dailyQuestionControllerHash() =>
-    r'971f059eb18ddaf4c26443283bb9f1677fcf205c';
+    r'cd3622a0188f3d49dfe0466a27892fba6ac20a3f';
 
 /// Controller for Daily Question actions
 ///

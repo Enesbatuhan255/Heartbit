@@ -12,6 +12,7 @@ abstract class UserRemoteDataSource {
   Future<void> updatePhotoUrl(String uid, String photoUrl);
   Future<void> updateInteraction(String uid);
   Future<void> updateLocation(String uid, double latitude, double longitude);
+  Future<void> updateSleepStatus(String uid, bool isSleeping);
 }
 
 class UserRemoteDataSourceImpl implements UserRemoteDataSource {
@@ -83,6 +84,14 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
     await _usersCollection.doc(uid).update({
       'latitude': latitude,
       'longitude': longitude,
+      'updatedAt': Timestamp.now(),
+    });
+  }
+
+  @override
+  Future<void> updateSleepStatus(String uid, bool isSleeping) async {
+    await _usersCollection.doc(uid).update({
+      'isSleeping': isSleeping,
       'updatedAt': Timestamp.now(),
     });
   }

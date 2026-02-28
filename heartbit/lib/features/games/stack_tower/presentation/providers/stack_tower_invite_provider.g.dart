@@ -6,7 +6,7 @@ part of 'stack_tower_invite_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$stackTowerInvitesHash() => r'6f9d6129e0fa1b6cb825e68cff743c12c68f99cf';
+String _$stackTowerInvitesHash() => r'6e0a1f122b5eee3333a90dc812d68f0e4942d09f';
 
 /// Watches for Stack Tower invitations for the current user
 ///

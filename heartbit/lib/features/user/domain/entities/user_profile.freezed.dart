@@ -27,6 +27,7 @@ mixin _$UserProfile {
   DateTime? get lastSeen => throw _privateConstructorUsedError;
   DateTime? get lastInteraction => throw _privateConstructorUsedError;
   bool get isOnline => throw _privateConstructorUsedError;
+  bool get isSleeping => throw _privateConstructorUsedError;
   double? get latitude => throw _privateConstructorUsedError;
   double? get longitude => throw _privateConstructorUsedError;
 
@@ -54,6 +55,7 @@ abstract class $UserProfileCopyWith<$Res> {
       DateTime? lastSeen,
       DateTime? lastInteraction,
       bool isOnline,
+      bool isSleeping,
       double? latitude,
       double? longitude});
 }
@@ -80,6 +82,7 @@ class _$UserProfileCopyWithImpl<$Res, $Val extends UserProfile>
     Object? lastSeen = freezed,
     Object? lastInteraction = freezed,
     Object? isOnline = null,
+    Object? isSleeping = null,
     Object? latitude = freezed,
     Object? longitude = freezed,
   }) {
@@ -112,6 +115,10 @@ class _$UserProfileCopyWithImpl<$Res, $Val extends UserProfile>
           ? _value.isOnline
           : isOnline // ignore: cast_nullable_to_non_nullable
               as bool,
+      isSleeping: null == isSleeping
+          ? _value.isSleeping
+          : isSleeping // ignore: cast_nullable_to_non_nullable
+              as bool,
       latitude: freezed == latitude
           ? _value.latitude
           : latitude // ignore: cast_nullable_to_non_nullable
@@ -140,6 +147,7 @@ abstract class _$$UserProfileImplCopyWith<$Res>
       DateTime? lastSeen,
       DateTime? lastInteraction,
       bool isOnline,
+      bool isSleeping,
       double? latitude,
       double? longitude});
 }
@@ -164,6 +172,7 @@ class __$$UserProfileImplCopyWithImpl<$Res>
     Object? lastSeen = freezed,
     Object? lastInteraction = freezed,
     Object? isOnline = null,
+    Object? isSleeping = null,
     Object? latitude = freezed,
     Object? longitude = freezed,
   }) {
@@ -196,6 +205,10 @@ class __$$UserProfileImplCopyWithImpl<$Res>
           ? _value.isOnline
           : isOnline // ignore: cast_nullable_to_non_nullable
               as bool,
+      isSleeping: null == isSleeping
+          ? _value.isSleeping
+          : isSleeping // ignore: cast_nullable_to_non_nullable
+              as bool,
       latitude: freezed == latitude
           ? _value.latitude
           : latitude // ignore: cast_nullable_to_non_nullable
@@ -219,6 +232,7 @@ class _$UserProfileImpl implements _UserProfile {
       this.lastSeen,
       this.lastInteraction,
       this.isOnline = false,
+      this.isSleeping = false,
       this.latitude,
       this.longitude});
 
@@ -241,13 +255,16 @@ class _$UserProfileImpl implements _UserProfile {
   @JsonKey()
   final bool isOnline;
   @override
+  @JsonKey()
+  final bool isSleeping;
+  @override
   final double? latitude;
   @override
   final double? longitude;
 
   @override
   String toString() {
-    return 'UserProfile(uid: $uid, displayName: $displayName, photoUrl: $photoUrl, status: $status, lastSeen: $lastSeen, lastInteraction: $lastInteraction, isOnline: $isOnline, latitude: $latitude, longitude: $longitude)';
+    return 'UserProfile(uid: $uid, displayName: $displayName, photoUrl: $photoUrl, status: $status, lastSeen: $lastSeen, lastInteraction: $lastInteraction, isOnline: $isOnline, isSleeping: $isSleeping, latitude: $latitude, longitude: $longitude)';
   }
 
   @override
@@ -267,6 +284,8 @@ class _$UserProfileImpl implements _UserProfile {
                 other.lastInteraction == lastInteraction) &&
             (identical(other.isOnline, isOnline) ||
                 other.isOnline == isOnline) &&
+            (identical(other.isSleeping, isSleeping) ||
+                other.isSleeping == isSleeping) &&
             (identical(other.latitude, latitude) ||
                 other.latitude == latitude) &&
             (identical(other.longitude, longitude) ||
@@ -275,8 +294,18 @@ class _$UserProfileImpl implements _UserProfile {
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, uid, displayName, photoUrl,
-      status, lastSeen, lastInteraction, isOnline, latitude, longitude);
+  int get hashCode => Object.hash(
+      runtimeType,
+      uid,
+      displayName,
+      photoUrl,
+      status,
+      lastSeen,
+      lastInteraction,
+      isOnline,
+      isSleeping,
+      latitude,
+      longitude);
 
   /// Create a copy of UserProfile
   /// with the given fields replaced by the non-null parameter values.
@@ -303,6 +332,7 @@ abstract class _UserProfile implements UserProfile {
       final DateTime? lastSeen,
       final DateTime? lastInteraction,
       final bool isOnline,
+      final bool isSleeping,
       final double? latitude,
       final double? longitude}) = _$UserProfileImpl;
 
@@ -323,6 +353,8 @@ abstract class _UserProfile implements UserProfile {
   DateTime? get lastInteraction;
   @override
   bool get isOnline;
+  @override
+  bool get isSleeping;
   @override
   double? get latitude;
   @override

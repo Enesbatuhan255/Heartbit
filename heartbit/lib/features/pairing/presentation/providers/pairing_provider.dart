@@ -46,10 +46,11 @@ WatchCoupleUseCase watchCoupleUseCase(WatchCoupleUseCaseRef ref) {
 
 // --- Presentation Layer Providers (Controllers & State) ---
 
-@riverpod
+@Riverpod(keepAlive: true)
 Stream<CoupleEntity?> coupleState(CoupleStateRef ref) {
+  ref.keepAlive();
   final user = ref.watch(authUserIdProvider); // We need current user ID
-  if (user == null) return const Stream.empty();
+  if (user == null) return Stream.value(null);
   
   return ref.watch(watchCoupleUseCaseProvider)(user);
 }
@@ -61,15 +62,33 @@ class PairingController extends _$PairingController {
     return null; // No code initially
   }
 
+  /// Ensures user is logged in (anonymous auth), returns userId or null
+  Future<String?> _ensureAuth() async {
+    var userId = ref.read(authUserIdProvider);
+    if (userId != null) return userId;
+
+    // Auto sign-in anonymously
+    await ref.read(authControllerProvider.notifier).signInAnonymously();
+    
+    // Poll for auth state propagation with timeout (up to 3 seconds)
+    for (int i = 0; i < 10; i++) {
+      await Future.delayed(const Duration(milliseconds: 300));
+      userId = ref.read(authUserIdProvider);
+      if (userId != null) return userId;
+    }
+    return null;
+  }
+
   Future<void> generateCode() async {
     state = const AsyncLoading();
-    final userId = ref.read(authUserIdProvider);
-    if (userId == null) {
-      state = AsyncError('User not logged in', StackTrace.current);
-      return;
-    }
 
     try {
+      final userId = await _ensureAuth();
+      if (userId == null) {
+        state = AsyncError('Giriş yapılamadı. Lütfen tekrar deneyin.', StackTrace.current);
+        return;
+      }
+
       final code = await ref.read(generatePairingCodeUseCaseProvider)(userId);
       state = AsyncData(code);
     } catch (e, st) {
@@ -79,20 +98,18 @@ class PairingController extends _$PairingController {
 
   Future<void> joinWithCode(String code) async {
     state = const AsyncLoading();
-    final userId = ref.read(authUserIdProvider);
-    
-    if (userId == null) {
-      state = AsyncError('User not logged in', StackTrace.current);
-      return;
-    }
 
     try {
+      final userId = await _ensureAuth();
+      if (userId == null) {
+        state = AsyncError('Giriş yapılamadı. Lütfen tekrar deneyin.', StackTrace.current);
+        return;
+      }
+
       await ref.read(joinWithCodeUseCaseProvider).call(
         currentUserId: userId,
         code: code,
       );
-      // On success, we don't change state to code, maybe navigate away or show success
-      // Ideally we should return a state indicating success
       state = const AsyncData(null); 
     } catch (e, st) {
       state = AsyncError(e, st);

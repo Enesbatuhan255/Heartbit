@@ -38,7 +38,8 @@ Stream<List<Memory>> memories(MemoriesRef ref) {
     return const Stream.empty();
   }
 
-  return ref.watch(memoryRepositoryProvider)
+  return ref
+      .watch(memoryRepositoryProvider)
       .watchMemories(coupleAsync.value!.id);
 }
 
@@ -69,7 +70,8 @@ class MemoryController extends _$MemoryController {
       // Check quota (Max 50 memories)
       final currentCount = await repo.getMemoryCount(coupleId);
       if (currentCount >= 50) {
-        throw Exception('Anı kutusu doldu! (Limit: 50 anı). Yeni anı eklemek için eskileri silmelisin.');
+        throw Exception(
+            'Anı kutusu doldu! (Limit: 50 anı). Yeni anı eklemek için eskileri silmelisin.');
       }
 
       // Upload image first
@@ -91,6 +93,39 @@ class MemoryController extends _$MemoryController {
     } catch (e) {
       rethrow; // Rethrow so UI can catch it
     }
+  }
+
+  Future<Memory?> addTextMemory({
+    required DateTime date,
+    required String description,
+    String? title,
+  }) async {
+    final coupleAsync = ref.read(coupleStateProvider);
+    final userId = ref.read(authUserIdProvider);
+
+    if (!coupleAsync.hasValue || coupleAsync.value == null || userId == null) {
+      throw Exception('Kullanici veya partner bilgisi bulunamadi.');
+    }
+
+    final coupleId = coupleAsync.value!.id;
+    final repo = ref.read(memoryRepositoryProvider);
+
+    final currentCount = await repo.getMemoryCount(coupleId);
+    if (currentCount >= 50) {
+      throw Exception('Ani kutusu doldu! (Limit: 50 ani).');
+    }
+
+    final memory = Memory(
+      id: '',
+      coupleId: coupleId,
+      imageUrl: '',
+      date: date,
+      description: description.trim().isEmpty ? ' ' : description.trim(),
+      title: title,
+      createdBy: userId,
+    );
+
+    return repo.addMemory(memory);
   }
 
   Future<void> deleteMemory(String memoryId) async {

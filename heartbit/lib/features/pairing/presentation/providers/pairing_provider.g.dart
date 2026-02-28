@@ -102,11 +102,11 @@ final watchCoupleUseCaseProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef WatchCoupleUseCaseRef = AutoDisposeProviderRef<WatchCoupleUseCase>;
-String _$coupleStateHash() => r'e4cf4194ecc1d28e034cf35827669f4cd53fcc07';
+String _$coupleStateHash() => r'b284e8639b50685911ab781cc579f08fd41935e2';
 
 /// See also [coupleState].
 @ProviderFor(coupleState)
-final coupleStateProvider = AutoDisposeStreamProvider<CoupleEntity?>.internal(
+final coupleStateProvider = StreamProvider<CoupleEntity?>.internal(
   coupleState,
   name: r'coupleStateProvider',
   debugGetCreateSourceHash:
@@ -117,8 +117,8 @@ final coupleStateProvider = AutoDisposeStreamProvider<CoupleEntity?>.internal(
 
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
-typedef CoupleStateRef = AutoDisposeStreamProviderRef<CoupleEntity?>;
-String _$pairingControllerHash() => r'00805808bb7f14ab823c6fbd42f8f42bb87e9d2f';
+typedef CoupleStateRef = StreamProviderRef<CoupleEntity?>;
+String _$pairingControllerHash() => r'e8fc3fad6b97c5be9a4d2aa3e837b3b869a681af';
 
 /// See also [PairingController].
 @ProviderFor(PairingController)

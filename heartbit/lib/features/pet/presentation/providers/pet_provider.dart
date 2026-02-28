@@ -29,8 +29,9 @@ PetRepository petRepository(PetRepositoryRef ref) {
 
 // --- Presentation Layer ---
 
-@riverpod
+@Riverpod(keepAlive: true)
 Stream<Pet?> petState(PetStateRef ref) {
+  ref.keepAlive();
   final user = ref.watch(authUserIdProvider);
   if (user == null) return const Stream.empty();
   

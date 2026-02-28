@@ -11,4 +11,5 @@ abstract class UserRepository {
   Future<void> updateProfilePhoto(String uid, String photoUrl);
   Future<void> updateInteraction(String uid);
   Future<void> updateLocation(String uid, double latitude, double longitude);
+  Future<void> updateSleepStatus(String uid, bool isSleeping);
 }

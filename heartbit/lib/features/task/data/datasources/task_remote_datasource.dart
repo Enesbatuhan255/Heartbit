@@ -33,6 +33,23 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
   DocumentReference<Map<String, dynamic>> _coupleDoc(String coupleId) =>
       _firestore.collection('couples').doc(coupleId);
 
+  int _resolveTimezoneOffsetMinutes(Map<String, dynamic> data) {
+    return (data['timezoneOffsetMinutes'] as num?)?.toInt() ?? 0;
+  }
+
+  String _formatUtcOffset(int offsetMinutes) {
+    final sign = offsetMinutes >= 0 ? '+' : '-';
+    final absolute = offsetMinutes.abs();
+    final hours = (absolute ~/ 60).toString().padLeft(2, '0');
+    final minutes = (absolute % 60).toString().padLeft(2, '0');
+    return 'UTC$sign$hours:$minutes';
+  }
+
+  DateTime _coupleDay(DateTime utcDateTime, int offsetMinutes) {
+    final inCoupleZone = utcDateTime.toUtc().add(Duration(minutes: offsetMinutes));
+    return DateTime.utc(inCoupleZone.year, inCoupleZone.month, inCoupleZone.day);
+  }
+
   @override
   Stream<List<DailyTask>> watchTodaysTasks(String userId) {
     return _tasksCollection(userId).snapshots().asyncMap((snapshot) async {
@@ -168,10 +185,11 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
       
       if (currentStreak == 0 || lastStreakDate == null) return 0;
       
-      // Validate streak is still valid using UTC
+      // Validate streak using the couple's fixed timezone offset
+      final timezoneOffsetMinutes = _resolveTimezoneOffsetMinutes(data);
       final now = DateTime.now().toUtc();
-      final today = DateTime.utc(now.year, now.month, now.day);
-      final lastDate = DateTime.utc(lastStreakDate.year, lastStreakDate.month, lastStreakDate.day);
+      final today = _coupleDay(now, timezoneOffsetMinutes);
+      final lastDate = _coupleDay(lastStreakDate, timezoneOffsetMinutes);
       final yesterday = today.subtract(const Duration(days: 1));
       
       // If lastStreakDate is today or yesterday, streak is valid
@@ -193,19 +211,21 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
       final snapshot = await transaction.get(docRef);
       if (!snapshot.exists) return;
       
-      final lastStreakDate = (snapshot.data()?['lastStreakDate'] as Timestamp?)?.toDate();
+      final data = snapshot.data() ?? {};
+      final lastStreakDate = (data['lastStreakDate'] as Timestamp?)?.toDate();
       if (lastStreakDate == null) return;
       
       final now = DateTime.now().toUtc();
-      final today = DateTime.utc(now.year, now.month, now.day);
-      final lastDate = DateTime.utc(lastStreakDate.year, lastStreakDate.month, lastStreakDate.day);
+      final timezoneOffsetMinutes = _resolveTimezoneOffsetMinutes(data);
+      final today = _coupleDay(now, timezoneOffsetMinutes);
+      final lastDate = _coupleDay(lastStreakDate, timezoneOffsetMinutes);
       final yesterday = today.subtract(const Duration(days: 1));
       
       // Only reset if truly broken (more than 1 day gap)
       if (lastDate != today && lastDate != yesterday) {
         transaction.update(docRef, {
           'streak': 0,
-          'lastStreakDate': Timestamp.fromDate(today),
+          'lastStreakDate': Timestamp.fromDate(now),
         });
       }
     });
@@ -236,50 +256,68 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
       final currentStreak = (data['streak'] as num?)?.toInt() ?? 0;
       final lastStreakDate = (data['lastStreakDate'] as Timestamp?)?.toDate();
       
-      // Use UTC for all date comparisons
-      final now = DateTime.now().toUtc();
-      final today = DateTime.utc(now.year, now.month, now.day);
+      // Bootstrap missing timezone fields from current device once.
+      final localNow = DateTime.now();
+      final timezoneOffsetMinutes =
+          (data['timezoneOffsetMinutes'] as num?)?.toInt() ?? localNow.timeZoneOffset.inMinutes;
+      final timezoneUpdates = <String, dynamic>{};
+      if (data['timezoneOffsetMinutes'] == null) {
+        timezoneUpdates['timezoneOffsetMinutes'] = timezoneOffsetMinutes;
+      }
+      final timezone = (data['timezone'] as String?)?.trim();
+      if (timezone == null || timezone.isEmpty) {
+        timezoneUpdates['timezone'] = _formatUtcOffset(timezoneOffsetMinutes);
+      }
+
+      // Use couple timezone for day comparisons
+      final now = localNow.toUtc();
+      final today = _coupleDay(now, timezoneOffsetMinutes);
       final yesterday = today.subtract(const Duration(days: 1));
       
       // Check if already updated today
       if (lastStreakDate != null) {
-        final lastDate = DateTime.utc(lastStreakDate.year, lastStreakDate.month, lastStreakDate.day);
+        final lastDate = _coupleDay(lastStreakDate, timezoneOffsetMinutes);
         
         if (lastDate == today) {
           // Already interacted today - don't increment again, but mark interaction
-          transaction.update(interactionDocRef, {
+          if (timezoneUpdates.isNotEmpty) {
+            transaction.set(docRef, timezoneUpdates, SetOptions(merge: true));
+          }
+          transaction.set(interactionDocRef, {
             'hasInteraction': true,
             'lastInteractionAt': Timestamp.fromDate(DateTime.now().toUtc()),
-          });
+          }, SetOptions(merge: true));
           return;
         }
         
         // Check if yesterday had interaction (streak continues) or not (reset)
         if (lastDate != yesterday) {
           // Gap > 1 day: Streak broken - reset to 1 (new streak starts today)
-          transaction.update(docRef, {
+          transaction.set(docRef, {
             'streak': 1,
-            'lastStreakDate': Timestamp.fromDate(today),
-          });
+            'lastStreakDate': Timestamp.fromDate(now),
+            ...timezoneUpdates,
+          }, SetOptions(merge: true));
           transaction.set(interactionDocRef, {
             'hasInteraction': true,
             'date': Timestamp.fromDate(today),
             'lastInteractionAt': Timestamp.fromDate(DateTime.now().toUtc()),
-          });
+          }, SetOptions(merge: true));
           return;
         }
       }
       
       // Increment streak (yesterday had interaction or first time)
-      transaction.update(docRef, {
+      transaction.set(docRef, {
         'streak': currentStreak + 1,
-        'lastStreakDate': Timestamp.fromDate(today),
-      });
+        'lastStreakDate': Timestamp.fromDate(now),
+        ...timezoneUpdates,
+      }, SetOptions(merge: true));
       transaction.set(interactionDocRef, {
         'hasInteraction': true,
         'date': Timestamp.fromDate(today),
         'lastInteractionAt': Timestamp.fromDate(DateTime.now().toUtc()),
-      });
+      }, SetOptions(merge: true));
     });
   }
 

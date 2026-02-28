@@ -17,7 +17,8 @@ class DrawAndGuessScreen extends ConsumerStatefulWidget {
   ConsumerState<DrawAndGuessScreen> createState() => _DrawAndGuessScreenState();
 }
 
-class _DrawAndGuessScreenState extends ConsumerState<DrawAndGuessScreen> {
+class _DrawAndGuessScreenState extends ConsumerState<DrawAndGuessScreen>
+    with WidgetsBindingObserver {
   // Drawer state
   List<DrawingPoint> _localPoints = [];
   Timer? _timer;
@@ -30,17 +31,21 @@ class _DrawAndGuessScreenState extends ConsumerState<DrawAndGuessScreen> {
   // Session management
   late DateTime _entryTime;
   bool _isCancellingStale = false;
+  bool _didEntrySessionCleanup = false;
+  bool _isLocalSessionExitInProgress = false;
   String? _lastHandledSolvedSessionId; // Track which session we already handled auto-start for
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _entryTime = DateTime.now();
     _confettiController = ConfettiController(duration: const Duration(seconds: 3));
   }
   
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _timer?.cancel();
     _guessController.dispose();
     _confettiController.dispose();
@@ -85,6 +90,7 @@ class _DrawAndGuessScreenState extends ConsumerState<DrawAndGuessScreen> {
   }
 
   Future<void> _onExit() async {
+    _isLocalSessionExitInProgress = true;
     final session = ref.read(activeDrawingSessionProvider).valueOrNull;
     
     // Cancel session if there's an active one (regardless of drawer/guesser)
@@ -99,6 +105,27 @@ class _DrawAndGuessScreenState extends ConsumerState<DrawAndGuessScreen> {
     
     if (mounted) {
       context.go('/dashboard');
+    }
+  }
+
+  Future<void> _cancelSessionForAppLeave() async {
+    if (_isLocalSessionExitInProgress) return;
+    _isLocalSessionExitInProgress = true;
+    final session = ref.read(activeDrawingSessionProvider).valueOrNull;
+    if (session == null) {
+      _isLocalSessionExitInProgress = false;
+      return;
+    }
+    if (session.status == 'solved' || session.status == 'cancelled') {
+      _isLocalSessionExitInProgress = false;
+      return;
+    }
+
+    try {
+      await ref.read(drawingGameControllerProvider.notifier).cancelSession(session.id);
+    } catch (e) {
+      debugPrint('Error cancelling session on app leave: $e');
+      _isLocalSessionExitInProgress = false;
     }
   }
 
@@ -156,6 +183,21 @@ class _DrawAndGuessScreenState extends ConsumerState<DrawAndGuessScreen> {
     // Listen for 'solved' state to trigger confetti and auto-start next game
     ref.listen(activeDrawingSessionProvider, (previous, next) {
       final session = next.valueOrNull;
+
+      // On re-entry, never resume an old in-progress session.
+      if (!_didEntrySessionCleanup && session != null) {
+        final isOldSession = session.createdAt.isBefore(_entryTime);
+        final isInProgress = session.status != 'solved' && session.status != 'cancelled';
+        _didEntrySessionCleanup = true;
+        if (isOldSession && isInProgress) {
+          _isLocalSessionExitInProgress = true;
+          Future.microtask(
+            () => ref.read(drawingGameControllerProvider.notifier).cancelSession(session.id),
+          );
+          return;
+        }
+      }
+
       if (session != null && session.status == 'solved') {
         // Only handle each solved session ONCE using session ID
         if (_lastHandledSolvedSessionId != session.id) {
@@ -183,7 +225,12 @@ class _DrawAndGuessScreenState extends ConsumerState<DrawAndGuessScreen> {
       final currentSession = next.valueOrNull;
       
       // If we had an active session (not solved) and now it's gone, partner exited
-      if (previousSession != null && 
+      if (currentSession == null && _isLocalSessionExitInProgress) {
+        _isLocalSessionExitInProgress = false;
+      }
+
+      if (!_isLocalSessionExitInProgress &&
+          previousSession != null && 
           previousSession.status != 'solved' && 
           currentSession == null &&
           !next.isLoading) {
@@ -201,11 +248,11 @@ class _DrawAndGuessScreenState extends ConsumerState<DrawAndGuessScreen> {
       child: Scaffold(
         backgroundColor: AppColors.background,
         appBar: AppBar(
-          title: const Text('Draw & Guess', style: TextStyle(color: Colors.white)),
+          title: const Text('Draw & Guess', style: TextStyle(color: AppColors.textPrimary)),
           backgroundColor: Colors.transparent,
           elevation: 0,
           leading: BackButton(
-            color: Colors.white, 
+            color: AppColors.textPrimary,
             onPressed: _onExit,
           ),
         ),
@@ -225,27 +272,7 @@ class _DrawAndGuessScreenState extends ConsumerState<DrawAndGuessScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        // DEBUG INFO - Remove after testing
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          margin: const EdgeInsets.only(bottom: 24),
-                          decoration: BoxDecoration(
-                            color: Colors.black54,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Column(
-                            children: [
-                              Text(
-                                'DEBUG - CoupleID: ${couple?.id ?? "null"}',
-                                style: const TextStyle(color: Colors.yellow, fontSize: 10),
-                              ),
-                              Text(
-                                'UserID: ${userId ?? "null"}',
-                                style: const TextStyle(color: Colors.yellow, fontSize: 10),
-                              ),
-                            ],
-                          ),
-                        ),
+
                         if (couple == null)
                           const Padding(
                             padding: EdgeInsets.only(bottom: 16),
@@ -293,12 +320,12 @@ class _DrawAndGuessScreenState extends ConsumerState<DrawAndGuessScreen> {
                 final staleThreshold = _entryTime.subtract(const Duration(seconds: 5));
                 final isStale = session.drawerId == userId && session.createdAt.isBefore(staleThreshold);
                 
-                print('[DrawingGame] Stale check: drawerId=${session.drawerId}, myId=$userId, sessionCreatedAt=${session.createdAt}, entryTime=$_entryTime, isStale=$isStale');
+
                 
                 if (isStale) {
                   if (!_isCancellingStale) {
                     _isCancellingStale = true;
-                    print('[DrawingGame] Cancelling stale session ${session.id}');
+
                     Future.microtask(() => 
                       ref.read(drawingGameControllerProvider.notifier).cancelSession(session.id)
                     );
@@ -365,6 +392,13 @@ class _DrawAndGuessScreenState extends ConsumerState<DrawAndGuessScreen> {
     );
   }
 
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
+      unawaited(_cancelSessionForAppLeave());
+    }
+  }
+
   Widget _buildDrawerUI(DrawingSession session) {
     if (_localPoints.isEmpty && session.points.isNotEmpty) {
          _localPoints = List.from(session.points);
@@ -379,10 +413,10 @@ class _DrawAndGuessScreenState extends ConsumerState<DrawAndGuessScreen> {
                padding: const EdgeInsets.all(16.0),
                child: Text('Draw: ${session.secretWord}', style: const TextStyle(color: AppColors.accent, fontSize: 20, fontWeight: FontWeight.bold)),
              ),
-             Padding(
-               padding: const EdgeInsets.all(16.0),
-               child: Text('$_timeLeft s', style: const TextStyle(color: Colors.white, fontSize: 18)),
-             ),
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text('$_timeLeft s', style: const TextStyle(color: AppColors.textPrimary, fontSize: 18)),
+              ),
           ],
         ),
         
@@ -470,9 +504,9 @@ class _DrawAndGuessScreenState extends ConsumerState<DrawAndGuessScreen> {
     return Column(
       children: [
          Container(
-          padding: const EdgeInsets.all(16),
-          child: const Text('Tahmin Et!', style: TextStyle(fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold)),
-        ),
+           padding: const EdgeInsets.all(16),
+           child: const Text('Tahmin Et!', style: TextStyle(fontSize: 20, color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
+         ),
         Expanded(
           child: Container(
             width: double.infinity,
@@ -492,7 +526,7 @@ class _DrawAndGuessScreenState extends ConsumerState<DrawAndGuessScreen> {
               Expanded(
                 child: TextField(
                   controller: _guessController,
-                  style: const TextStyle(color: Colors.white),
+                  style: const TextStyle(color: AppColors.textPrimary),
                   decoration: InputDecoration(
                     hintText: 'Cevabın ne?',
                     hintStyle: const TextStyle(color: AppColors.textSecondary),

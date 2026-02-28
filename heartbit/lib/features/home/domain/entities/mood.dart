@@ -1,4 +1,4 @@
-enum Mood {
+﻿enum Mood {
   happy,
   needHug,
   energetic,
@@ -60,29 +60,28 @@ enum Mood {
     }
   }
 
-  /// Returns a color associated with this mood for UI theming
   int get colorValue {
     switch (this) {
       case Mood.happy:
-        return 0xFFFFD166; // Warm yellow
+        return 0xFFFFD166;
       case Mood.needHug:
-        return 0xFFFFB7C5; // Soft pink
+        return 0xFFFFB7C5;
       case Mood.energetic:
-        return 0xFFFF6B35; // Vibrant orange
+        return 0xFFFF6B35;
       case Mood.tired:
-        return 0xFF7B8CDE; // Soft periwinkle
+        return 0xFF7B8CDE;
       case Mood.low:
-        return 0xFF6B7280; // Gentle gray
+        return 0xFF6B7280;
       case Mood.romantic:
-        return 0xFFFF4B7D; // HeartBit pink
+        return 0xFFFF4B7D;
       case Mood.stressed:
-        return 0xFFDC2626; // Alert red
+        return 0xFFDC2626;
       case Mood.calm:
-        return 0xFF10B981; // Peaceful green
+        return 0xFF10B981;
       case Mood.excited:
-        return 0xFF7B61FF; // Electric purple
+        return 0xFF7B61FF;
       case Mood.sick:
-        return 0xFF84CC16; // Muted lime
+        return 0xFF84CC16;
     }
   }
 }

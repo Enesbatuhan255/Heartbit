@@ -11,6 +11,8 @@ class CoupleModel extends CoupleEntity {
     required super.level,
     super.streak = 0,
     super.lastStreakDate,
+    super.timezone = 'UTC',
+    super.timezoneOffsetMinutes = 0,
     super.eggWarmth = 0,
     super.isHatched = false,
     super.lastEggInteraction,
@@ -28,11 +30,13 @@ class CoupleModel extends CoupleEntity {
       level: (data['level'] as num).toInt(),
       streak: (data['streak'] as num?)?.toInt() ?? 0,
       lastStreakDate: (data['lastStreakDate'] as Timestamp?)?.toDate(),
+      timezone: (data['timezone'] as String?) ?? 'UTC',
+      timezoneOffsetMinutes: (data['timezoneOffsetMinutes'] as num?)?.toInt() ?? 0,
       eggWarmth: (data['eggWarmth'] as num?)?.toInt() ?? 0,
       isHatched: data['isHatched'] as bool? ?? false,
       lastEggInteraction: (data['lastEggInteraction'] as Timestamp?)?.toDate(),
-      createdAt: (data['createdAt'] as Timestamp).toDate(),
-      updatedAt: (data['updatedAt'] as Timestamp).toDate(),
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      updatedAt: (data['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
 
@@ -45,6 +49,8 @@ class CoupleModel extends CoupleEntity {
       level: level,
       streak: streak,
       lastStreakDate: lastStreakDate,
+      timezone: timezone,
+      timezoneOffsetMinutes: timezoneOffsetMinutes,
       eggWarmth: eggWarmth,
       isHatched: isHatched,
       lastEggInteraction: lastEggInteraction,

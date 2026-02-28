@@ -12,6 +12,7 @@ class UserProfileModel {
       status: data['status'] as String?,
       lastSeen: (data['lastSeen'] as Timestamp?)?.toDate(),
       isOnline: data['isOnline'] as bool? ?? false,
+      isSleeping: data['isSleeping'] as bool? ?? false,
       latitude: (data['latitude'] as num?)?.toDouble(),
       longitude: (data['longitude'] as num?)?.toDouble(),
     );
@@ -24,6 +25,7 @@ class UserProfileModel {
       'status': user.status,
       'lastSeen': user.lastSeen != null ? Timestamp.fromDate(user.lastSeen!) : null,
       'isOnline': user.isOnline,
+      'isSleeping': user.isSleeping,
       'latitude': user.latitude,
       'longitude': user.longitude,
       'updatedAt': Timestamp.now(),

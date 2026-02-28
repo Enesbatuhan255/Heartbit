@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -14,8 +13,14 @@ import 'package:heartbit/features/activity_hub/presentation/screens/bucket_list_
 import 'package:heartbit/features/activity_hub/presentation/screens/swipe_setup_screen.dart';
 import 'package:heartbit/features/activity_hub/presentation/screens/enhanced_swipe_screen.dart';
 import 'package:heartbit/features/games/stack_tower/presentation/screens/stack_tower_screen.dart';
+import 'package:heartbit/features/games/emoji_game/presentation/screens/emoji_game_screen.dart';
+
+import 'package:heartbit/features/games/rhythm_copy/presentation/screens/rhythm_copy_screen.dart';
+import 'package:heartbit/features/games/story_chain/presentation/screens/story_chain_screen.dart';
+import 'package:heartbit/features/games/word_chain/presentation/screens/word_chain_screen.dart';
 import 'package:heartbit/features/memory_vault/presentation/screens/memory_vault_screen.dart';
 import 'package:heartbit/features/memory_vault/presentation/screens/add_memory_screen.dart';
+import 'package:heartbit/features/pet/presentation/screens/pet_garden_screen.dart';
 import 'package:heartbit/shared/providers/app_state_provider.dart';
 import 'package:heartbit/shared/presentation/screens/loading_screen.dart';
 
@@ -33,6 +38,10 @@ GoRouter goRouter(GoRouterRef ref) {
     initialLocation: '/loading',
     debugLogDiagnostics: true,
     routes: [
+      GoRoute(
+        path: '/',
+        redirect: (context, state) => '/loading',
+      ),
       GoRoute(
         path: '/loading',
         builder: (context, state) => const LoadingScreen(),
@@ -84,6 +93,27 @@ GoRouter goRouter(GoRouterRef ref) {
         path: '/stack-tower',
         builder: (context, state) => const StackTowerScreen(),
       ),
+      // Emoji Tahmin Game
+      GoRoute(
+        path: '/emoji-game',
+        builder: (context, state) => const EmojiGameScreen(),
+      ),
+
+      // Rhythm Copy
+      GoRoute(
+        path: '/rhythm-copy',
+        builder: (context, state) => const RhythmCopyScreen(),
+      ),
+      // Word Chain
+      GoRoute(
+        path: '/word-chain',
+        builder: (context, state) => const WordChainScreen(),
+      ),
+      // Story Chain
+      GoRoute(
+        path: '/story-chain',
+        builder: (context, state) => const StoryChainScreen(),
+      ),
       // Memory Vault Routes
       GoRoute(
         path: '/memory-vault',
@@ -93,15 +123,23 @@ GoRouter goRouter(GoRouterRef ref) {
         path: '/add-memory',
         builder: (context, state) => const AddMemoryScreen(),
       ),
+      GoRoute(
+        path: '/pet-garden',
+        builder: (context, state) => const PetGardenScreen(),
+      ),
+      GoRoute(
+        path: '/:rest(.*)',
+        redirect: (context, state) => '/loading',
+      ),
     ],
     redirect: (context, state) {
       final isLoadingRoute = state.uri.path == '/loading';
-      
+
       // If still loading, redirect to loading screen
       if (appState.isLoading) {
         return isLoadingRoute ? null : '/loading';
       }
-      
+
       // Loading complete, redirect away from loading screen
       if (isLoadingRoute) {
         // Determine where to go based on auth/pairing state
@@ -113,7 +151,7 @@ GoRouter goRouter(GoRouterRef ref) {
 
       final isLoggedIn = appState.isAuthenticated;
       final isPaired = appState.isPaired;
-      
+
       final isPairingRoute = state.uri.path == '/pairing';
 
       // 1. Not Logged In -> Pairing (for now)
@@ -127,7 +165,7 @@ GoRouter goRouter(GoRouterRef ref) {
       // If Coupled -> Dashboard (only redirect if trying to access auth/pairing screens)
       if (isPaired) {
         if (isPairingRoute) return '/dashboard';
-      } 
+      }
       // If Not Coupled -> Pairing
       else {
         if (!isPairingRoute) return '/pairing';

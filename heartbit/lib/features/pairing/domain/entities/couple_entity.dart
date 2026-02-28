@@ -18,6 +18,8 @@ class CoupleEntity extends Equatable {
     required this.level,
     this.streak = 0,
     this.lastStreakDate,
+    this.timezone = 'UTC',
+    this.timezoneOffsetMinutes = 0,
     this.eggWarmth = 0,
     this.isHatched = false,
     this.lastEggInteraction,
@@ -27,6 +29,8 @@ class CoupleEntity extends Equatable {
 
   final int streak;
   final DateTime? lastStreakDate;
+  final String timezone;
+  final int timezoneOffsetMinutes;
   final int eggWarmth; // 0-1000
   final bool isHatched;
   final DateTime? lastEggInteraction;
@@ -38,6 +42,10 @@ class CoupleEntity extends Equatable {
         user2Id,
         totalPoints,
         level,
+        streak,
+        lastStreakDate,
+        timezone,
+        timezoneOffsetMinutes,
         eggWarmth,
         isHatched,
         lastEggInteraction,

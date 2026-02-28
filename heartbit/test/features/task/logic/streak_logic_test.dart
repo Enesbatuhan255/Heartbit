@@ -2,17 +2,21 @@ import 'package:flutter_test/flutter_test.dart';
 
 /// Helper class that replicates the Streak Validation Logic from TaskRemoteDataSource
 class StreakValidator {
+  static DateTime _coupleDay(DateTime utcDateTime, int timezoneOffsetMinutes) {
+    final inCoupleZone = utcDateTime.toUtc().add(Duration(minutes: timezoneOffsetMinutes));
+    return DateTime.utc(inCoupleZone.year, inCoupleZone.month, inCoupleZone.day);
+  }
+
   static int validateStreak({
     required int streak,
     required DateTime lastStreakDate,
     required DateTime now,
+    required int timezoneOffsetMinutes,
   }) {
     if (streak == 0) return 0;
 
-    final today = DateTime.utc(now.year, now.month, now.day);
-    // Ensure lastStreakDate is treated as UTC for day comparison, matching production logic
-    final lastDate = DateTime.utc(lastStreakDate.year, lastStreakDate.month, lastStreakDate.day);
-    
+    final today = _coupleDay(now, timezoneOffsetMinutes);
+    final lastDate = _coupleDay(lastStreakDate, timezoneOffsetMinutes);
     final yesterday = today.subtract(const Duration(days: 1));
 
     // If lastStreakDate is today or yesterday, streak is valid
@@ -35,6 +39,7 @@ void main() {
         streak: 5,
         lastStreakDate: lastUpdate,
         now: now,
+        timezoneOffsetMinutes: 0,
       );
       
       expect(result, 5);
@@ -47,6 +52,7 @@ void main() {
         streak: 5,
         lastStreakDate: lastUpdate,
         now: now,
+        timezoneOffsetMinutes: 0,
       );
       
       expect(result, 5);
@@ -61,6 +67,7 @@ void main() {
         streak: 5,
         lastStreakDate: lastUpdate,
         now: now,
+        timezoneOffsetMinutes: 0,
       );
       
       expect(result, 0, reason: 'Should reset because Jan 14 was skipped');
@@ -73,6 +80,7 @@ void main() {
         streak: 10,
         lastStreakDate: lastUpdate,
         now: now,
+        timezoneOffsetMinutes: 0,
       );
       
       expect(result, 0);
@@ -85,8 +93,22 @@ void main() {
         streak: 5,
         lastStreakDate: lastUpdate,
         now: now,
+        timezoneOffsetMinutes: 0,
       );
       expect(result, 5);
+    });
+
+    test('Streak is valid by local couple day even if UTC shows 2 dates apart', () {
+      final nowUtc = DateTime.utc(2024, 1, 15, 1, 0, 0); // Jan 15 UTC
+      final lastUpdateUtc = DateTime.utc(2024, 1, 13, 23, 30, 0); // Jan 13 UTC
+      // UTC+9: now => Jan 15 local, lastUpdate => Jan 14 local (yesterday)
+      final result = StreakValidator.validateStreak(
+        streak: 7,
+        lastStreakDate: lastUpdateUtc,
+        now: nowUtc,
+        timezoneOffsetMinutes: 9 * 60,
+      );
+      expect(result, 7);
     });
   });
 }
